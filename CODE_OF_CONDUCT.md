@@ -1,19 +1,17 @@
 <p align="center">
-  <a href="https://postimg.cc/nC9DNBkn">
-    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
+  <a href="https://postimg.cc/BXNZCYDS">
+    <img src="https://i.postimg.cc/0y16Phyw/app-logo.png)" alt="ic-launcher-playstore.png" />
   </a>
-</p>
 
-# Lab-RATS Project:
-## Code of Conduct & Ethical Usage Policy
+# Lab-RATS: Code of Conduct & Ethical Usage Policy
 
-### 1. Mission Statement
+## 1. Mission Statement
 
 **Lab-RATS** *(Security Tool for Access Remotely)* is developed by **K4N3CO** as a **high-fidelity platform** for **mobile security auditing**, **forensic analysis**, and **authorized penetration testing**. Our mission is to provide s**ecurity professionals** and **researchers** with a modern toolset to understand **mobile vulnerabilities** and **validate defense-in-depth strategies** *(such as Samsung Knox and Play Protect)* in a **controlled, legal environment**.
 
 ---
 
-### 2. The "Authorization First" Rule
+## 2. The "Authorization First" Rule
 
 **The Most fundamental principle of this project is Consensual Authorization**:
 
@@ -25,7 +23,7 @@
 
 ---
 
-### 3. Prohibited Malicious Activities
+## 3. Prohibited Malicious Activities
 
 Users found to be using **Lab-RATS** for **ANY** of the following activities **will be banned** from the **project’s communication channels**, and their **issues/pull** requests **will be closed**:
 
@@ -37,7 +35,7 @@ Users found to be using **Lab-RATS** for **ANY** of the following activities **w
 
 ---
 
-### 4. Handling Security Flags & Heuristics
+## 4. Handling Security Flags & Heuristics
 
 Due to the **powerful nature** of Remote Administration Tools *(RATs)*, **Lab-RATS** includes features—such as **keylogging, camera access**, and **stealth masquerading**—that are inherently flagged by **Antivirus** *(AV)*, **EDR**, and **Play Protect systems**:
 
@@ -47,13 +45,13 @@ Due to the **powerful nature** of Remote Administration Tools *(RATs)*, **Lab-RA
 
 ---
 
-### 5. User Responsibility & Legal Compliance
+## 5. User Responsibility & Legal Compliance
 
 By building or installing **Lab-RATS**, you agree that you are **solely responsible** for compliance with your **local, state**, and **national laws**. The **developers assume NO liability** for **ANY misuse, damage to hardware**, or **legal consequences** resulting from **your use of this software**.
 
 ---
 
-### 6. Community Professionalism
+## 6. Community Professionalism
 
 • **Respect Privacy**: When discussing research findings, **always redact sensitive information** *(IPs, phone numbers, or private data)*.
 
@@ -61,7 +59,7 @@ By building or installing **Lab-RATS**, you agree that you are **solely responsi
 
 ---
 
-### 7. Enforcement
+## 7. Enforcement
 
 **Project maintainers** have the **right** and **responsibility** to **remove, edit**, or **reject comments, commits, code**, and **other contributions** that **do not align** with this **Code of Conduct**.
 
