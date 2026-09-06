@@ -1,12 +1,11 @@
 <p align="center">
-  <a href="https://postimg.cc/nC9DNBkn">
-    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
+  <a href="https://postimg.cc/BXNZCYDS">
+    <img src="https://i.postimg.cc/0y16Phyw/app-logo.png)" alt="ic-launcher-playstore.png" />
   </a>
-</p>
 
-# Lab-RATS: Contribution Protocol
+# Lab-RATS: Contributions
 
-We don't do corporate bureaucracy here. We do technical elegance and operational efficiency. If you've got a better way to bypass a sandbox, optimize a payload, or harden the stealth engine, we want it.
+**We don't do corporate bureaucracy here**. We do **technical elegance and operational efficiency**. If you've got a **better way to bypass a sandbox, optimize a payload**, or **harden the stealth engine**, we want it.
 
 ## 0x01: The Workflow
 1. **Fork the Intel**: Clone the repo to your own workspace.
@@ -28,4 +27,5 @@ We don't do corporate bureaucracy here. We do technical elegance and operational
 If it's a standard bug, use the Issue Template. If it's a vulnerability in the protocol itself, see `SECURITY.md`.
 
 ---
+
 *Code talks. Noise walks.*
