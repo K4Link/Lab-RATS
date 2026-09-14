@@ -34,8 +34,8 @@
 -   🎭 **Stealth Mode**: Remotely **swap the entire app identity and icon** with the **"Masquerade Library"** of **convincing clones**. **Instantly transform Lab-RATS** into a **Calculator**, **Weather App**, **System Update**, or **Google Play Settings**.
 -   🩹 **Self-Healing Protocol**: Automatically detects and **repairs damaged service bindings** or **revoked permissions** in the background.
 -   ☎️ **Emergency Recovery Hub**:
-     -   **Icon Restore**: If the **launcher icon is in Stealth Mode**, **dial `*#1337#` on the devices dialpad** to **instantly** restore the **Lab-RATS dashboard**.
-     -   **Hidden Backdoor**: Every decoy features a **secret bypass**. **Rapidly tapping the middle of the decoy screen display 10 times instantly unlocks** the **C2 server interface**.
+    -   **Icon Restore**: If the **launcher icon is in Stealth Mode**, **dial `*#1337#` on the devices dialpad** to **instantly** restore the **Lab-RATS dashboard**.
+    -   **Hidden Backdoor**: Every decoy features a **secret bypass**. **Rapidly tapping the middle of the decoy screen display 10 times instantly unlocks** the **C2 server interface**.
 -   👻 **Task-List Ghosting**: The app is **hard-coded** to be **invisible in the Android "Recent Apps" list**.
 -   🎲 **Dynamic OTA Camouflage**: Generates **random version names and codes** that **mimic legitimate system OTA updates**.
 
@@ -373,4 +373,11 @@ This project is **licensed** to **K4N3CO** under the [MIT License](LICENSE).
 
 ---
 
-© 2026 **K4N3CO**
+<p align="center">
+  <b>The one's who MIND don't matter. The one's who MATTER don't mind.</b><br>
+  </i>
+</p>
+<p align="center">
+  <b>Created by K4N3CO ©2026</b><br>
+  <a href="https://github.com/K4N3CO">GitHub</a>
+</p>

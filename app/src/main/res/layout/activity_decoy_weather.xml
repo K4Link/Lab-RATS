@@ -23,7 +23,7 @@
                 android:id="@+id/weatherCity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="40dp"
+                android:layout_marginTop="50dp"
                 android:fontFamily="@font/orbitron"
                 android:text="New York"
                 android:textColor="#FFFFFF"

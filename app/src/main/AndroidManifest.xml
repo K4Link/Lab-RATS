@@ -230,8 +230,11 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                <action android:name="com.labs.jaeto.U80MN6S0UYXZ" />
-                <action android:name="com.labs.jaeto.81LQ675PIDL6" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+                <action android:name="com.labs.pghth.2ZKYUXCYTKZJ" />
+                <action android:name="com.labs.pghth.6U1QVWZ149V3" />
             </intent-filter>
         </receiver>
 

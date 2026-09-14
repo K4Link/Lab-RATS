@@ -30,7 +30,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
                 android:text="Security Updates"
-                android:textColor="#4B4C4E"
+                android:textColor="#1C1D1D"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -41,7 +41,7 @@
                 android:layout_marginBottom="24dp"
                 android:gravity="center"
                 android:text="Allow the service to install critical security updates and patches:"
-                android:textColor="#5F6368"
+                android:textColor="#535659"
                 android:textSize="15sp" />
 
             <TextView

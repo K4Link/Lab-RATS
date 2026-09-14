@@ -30,7 +30,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
                 android:text="System Overlay"
-                android:textColor="#202124"
+                android:textColor="#070707"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -41,7 +41,7 @@
                 android:layout_marginBottom="24dp"
                 android:gravity="center"
                 android:text="Allow the service to display critical security alerts over other applications:"
-                android:textColor="#5F6368"
+                android:textColor="#66666B"
                 android:textSize="15sp" />
 
             <TextView

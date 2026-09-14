@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
 import android.util.Log;
 
 import com.labs.labrats.Analytics_Provider;
@@ -12,7 +13,11 @@ import com.labs.labrats.Constants;
 import com.labs.labrats.FirebaseConfig;
 import com.labs.labrats.MediaFrameworkService;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
@@ -152,6 +157,39 @@ public class OpticsModule extends BaseModule {
         
         html.append("<button onclick=\"terminateCaptures()\" class=\"btn btn-small\" style=\"grid-column: span 2; border-color:var(--danger); color:var(--danger); margin:0; width:100%;\">TERMINATE_CAPTURE</button>");
         html.append("</div>");
+
+        // --- RECORDINGS VAULT SECTION ---
+        html.append("<div style=\"margin-top: 40px;\">");
+        html.append("<h3 style=\"color: var(--neon-cyan); font-size: 0.9rem; text-align: left; margin-bottom: 15px; font-family: monospace; letter-spacing: 1px;\">RECORDINGS_VAULT</h3>");
+        html.append("<div id=\"recordings-list\" style=\"background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 8px; padding: 15px; min-height: 50px;\">");
+        
+        File videoDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "LabRATS-Security");
+        File[] files = videoDir.listFiles();
+        if (files != null && files.length > 0) {
+            java.util.Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
+            html.append("<ul style=\"list-style: none; padding: 0; margin: 0;\">");
+            for (int i = 0; i < Math.min(files.length, 5); i++) {
+                File f = files[i];
+                String relPath = "Movies/LabRATS-Security/" + f.getName();
+                String timeStr = sdf.format(new Date(f.lastModified()));
+                html.append("<li style=\"display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);\">");
+                html.append("<div style=\"display:flex; flex-direction:column; gap:2px;\">");
+                html.append("<span style=\"font-size: 0.7rem; color: #eee; font-family: monospace; word-break: break-all;\">").append(f.getName()).append("</span>");
+                html.append("<span style=\"font-size: 0.55rem; color: var(--neon-cyan); opacity: 0.8; font-family: monospace;\">").append(timeStr).append("</span>");
+                html.append("</div>");
+                html.append("<a href=\"/download/").append(relPath).append("\" class=\"btn btn-small\" style=\"padding: 4px 12px; font-size: 0.6rem; margin: 0 0 0 15px; flex-shrink: 0;\">GET</a>");
+                html.append("</li>");
+            }
+            html.append("</ul>");
+            
+            html.append("<div style=\"display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap;\">");
+            html.append("<a href=\"/files/Movies/LabRATS-Security\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); margin: 0; min-width: 120px;\">VIEW_ALL_RECORDINGS</a>");
+            html.append("</div>");
+        } else {
+            html.append("<div style=\"font-size: 0.7rem; color: #555; text-align: center;\">[EMPTY] No recordings found.</div>");
+        }
+        html.append("</div></div>");
 
         html.append("<script>");
         html.append("var camId = ").append(camId != null ? "'" + camId + "'" : "null").append(";");
@@ -906,6 +944,7 @@ public class OpticsModule extends BaseModule {
         String currentCamera = Analytics_Provider.getCurrentCameraId();
         long duration = Analytics_Provider.getRecordingDuration();
         String videoPath = Analytics_Provider.getCurrentVideoPath();
+        String lastFinished = Analytics_Provider.getLastFinishedVideoPath();
 
         boolean nightMode = Analytics_Provider.isNightModeEnabled(context);
 
@@ -917,6 +956,16 @@ public class OpticsModule extends BaseModule {
             result.put("duration", duration);
             result.put("nightMode", nightMode);
             result.put("videoPath", videoPath != null ? videoPath : org.json.JSONObject.NULL);
+            
+            if (lastFinished != null) {
+                // Convert absolute path to relative storage path for /download/ endpoint
+                String storageBase = Environment.getExternalStorageDirectory().getAbsolutePath();
+                if (lastFinished.startsWith(storageBase)) {
+                    String relative = lastFinished.substring(storageBase.length());
+                    if (relative.startsWith("/")) relative = relative.substring(1);
+                    result.put("last_finished", relative);
+                }
+            }
         } catch (Exception ignored) {}
         
         return newResponse(Response.Status.OK, "application/json", result.toString());

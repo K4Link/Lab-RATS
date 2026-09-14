@@ -21,7 +21,7 @@
                 android:layout_width="209dp"
                 android:layout_height="182dp"
                 android:layout_gravity="center"
-                android:layout_marginTop="50dp"
+                android:layout_marginTop="40dp"
                 android:layout_marginBottom="30dp"
                 app:srcCompat="@drawable/ic_android_play" />
 
@@ -40,21 +40,21 @@
                     style="@style/SettingsItem"
                     android:backgroundTint="#33212020"
                     android:text="General"
-                    android:textColor="#AFAEAE" />
+                    android:textColor="#9E9D9D" />
 
                 <View style="@style/SettingsDivider" />
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Display &amp; Brightness"
-                    android:textColor="#B6B6B6" />
+                    android:textColor="#9E9D9D" />
 
                 <View style="@style/SettingsDivider" />
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Accessibility"
-                    android:textColor="#B6B5B5" />
+                    android:textColor="#9E9D9D" />
             </LinearLayout>
 
             <TextView
@@ -70,14 +70,14 @@
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Privacy"
-                    android:textColor="#B8B7B7" />
+                    android:textColor="#9E9D9D" />
 
                 <View style="@style/SettingsDivider" />
 
                 <TextView
                     style="@style/SettingsItem"
                     android:text="Security"
-                    android:textColor="#B3B2B2" />
+                    android:textColor="#9E9D9D" />
             </LinearLayout>
 
         </LinearLayout>

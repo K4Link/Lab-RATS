@@ -104,6 +104,9 @@ Thumbs.db
 build_output.txt
 build_log.txt
 
+# Artifacts
+.artifacts/
+
 # Node / Builder
 node_modules/
 package-lock.json

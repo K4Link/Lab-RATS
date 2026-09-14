@@ -32,7 +32,7 @@
 
         <GridLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="414dp"
             android:layout_marginBottom="10dp"
             android:columnCount="4"
             android:rowCount="5"
@@ -180,7 +180,7 @@
 
             <Button
                 style="@style/CalcBtn"
-                android:backgroundTint="#FE89E289"
+                android:backgroundTint="#FE429942"
                 android:text="="
                 android:textColor="#121212"
                 android:textSize="26sp"

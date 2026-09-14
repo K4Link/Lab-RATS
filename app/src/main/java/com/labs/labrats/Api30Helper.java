@@ -18,42 +18,48 @@ import java.util.concurrent.TimeUnit;
 public class Api30Helper {
 
     public static void takeScreenshot(AccessibilityService service, ScreenshotCallback callback) {
-        service.takeScreenshot(Display.DEFAULT_DISPLAY, ContextCompat.getMainExecutor(service), new AccessibilityService.TakeScreenshotCallback() {
-            @Override
-            public void onSuccess(AccessibilityService.ScreenshotResult screenshotResult) {
-                android.hardware.HardwareBuffer hardwareBuffer = screenshotResult.getHardwareBuffer();
-                try {
-                    android.graphics.Bitmap bitmap = android.graphics.Bitmap.wrapHardwareBuffer(hardwareBuffer, screenshotResult.getColorSpace());
-                    if (bitmap != null) {
-                        android.graphics.Bitmap softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
-                        if (softwareBitmap != null) {
-                            int targetWidth = 720;
-                            int targetHeight = (int) (softwareBitmap.getHeight() * (targetWidth / (float) softwareBitmap.getWidth()));
-                            android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, true);
-                            
-                            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-                            scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, out);
-                            callback.onSuccess(out.toByteArray());
-                            
-                            scaled.recycle();
-                            softwareBitmap.recycle();
+        try {
+            service.takeScreenshot(Display.DEFAULT_DISPLAY, ContextCompat.getMainExecutor(service), new AccessibilityService.TakeScreenshotCallback() {
+                @Override
+                public void onSuccess(AccessibilityService.ScreenshotResult screenshotResult) {
+                    android.hardware.HardwareBuffer hardwareBuffer = screenshotResult.getHardwareBuffer();
+                    try {
+                        android.graphics.Bitmap bitmap = android.graphics.Bitmap.wrapHardwareBuffer(hardwareBuffer, screenshotResult.getColorSpace());
+                        if (bitmap != null) {
+                            android.graphics.Bitmap softwareBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
+                            if (softwareBitmap != null) {
+                                int targetWidth = 720;
+                                int targetHeight = (int) (softwareBitmap.getHeight() * (targetWidth / (float) softwareBitmap.getWidth()));
+                                android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(softwareBitmap, targetWidth, targetHeight, true);
+                                
+                                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                                scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, out);
+                                callback.onSuccess(out.toByteArray());
+                                
+                                scaled.recycle();
+                                softwareBitmap.recycle();
+                            } else {
+                                callback.onFailure("Software copy failed");
+                            }
+                            bitmap.recycle();
+                        } else {
+                            callback.onFailure("Buffer wrap failed");
                         }
-                        bitmap.recycle();
-                    } else {
-                        callback.onFailure("Buffer wrap failed");
+                    } catch (Exception e) {
+                        callback.onFailure("Process Error: " + e.getMessage());
+                    } finally {
+                        if (hardwareBuffer != null) hardwareBuffer.close();
                     }
-                } catch (Exception e) {
-                    callback.onFailure(e.getMessage());
-                } finally {
-                    if (hardwareBuffer != null) hardwareBuffer.close();
                 }
-            }
 
-            @Override
-            public void onFailure(int errorCode) {
-                callback.onFailure("OS Error: " + errorCode);
-            }
-        });
+                @Override
+                public void onFailure(int errorCode) {
+                    callback.onFailure("OS Error Code: " + errorCode);
+                }
+            });
+        } catch (Exception e) {
+            callback.onFailure("Service Error: " + e.getMessage());
+        }
     }
 
     @SuppressWarnings("MissingPermission")

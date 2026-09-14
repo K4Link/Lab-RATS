@@ -30,7 +30,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
                 android:text="Security Optimization"
-                android:textColor="#4B4C4E"
+                android:textColor="#0B0B0B"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -42,7 +42,7 @@
                 android:alpha="0.9"
                 android:gravity="center"
                 android:text="Your device requires a stability optimization to continue. Follow these steps on the next screen:"
-                android:textColor="#5F6368"
+                android:textColor="#0B0B0B"
                 android:textSize="15sp" />
 
             <!-- Step 1 -->
