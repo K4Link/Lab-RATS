@@ -38,7 +38,7 @@
 # 🔥 Lab-RATS APK Builder
 
 <p align="center">
-  <a href="https://github.com/K4N3CO"><img src="https://img.shields.io/badge/K4N3CO.LAB-RATS-red?style=for-the-badge" alt="K4N3CO"></a>
+  <a href="https://github.com/K4N3CO"><img src="https://img.shields.io/badge/K4N3CO-LAB_RATS-red?style=for-the-badge" alt="K4N3CO"></a>
 </p>
 
 ---
