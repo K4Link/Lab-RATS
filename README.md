@@ -16,10 +16,10 @@
 
 -   🔐 **Remote C2 Security**: The **web dashboard** is **protected by a secure login wall** (Default Password: **admin1337**). The password can be **updated directly from the Terminal home page** for **enhanced security**.
 -   📡 **Secure Handshake Protocol**: Implemented a **masked credential handshake**. Passwords are **reversed and Base64 encoded** (`0x_` prefixed) on the client-side before transmission, rendering them **invisible to browser Network/Payload inspectors**.
--   📦 **Automated APK Generation**: Instantly build `signed.apk` *(for production)*.
--   🆔 **Advanced Identity Control**: Fully customize **App Name**, **Package ID**, and **Minimum SDK**.
--    **Auto-Density Scaling**: **Resizes logos automatically** for all Android **screen densities**.
--   📱 **PC/Mobile-Responsive**: The **remote web interface** is **fully optimized** for **both PC** and **smartphone browsers**, featuring a **touch-friendly layout, adaptive navigation tabs, and scalable UI elements** for monitoring from **any device**.
+-   📦 **Automated APK Generation**: **Instantly build** `signed.apk` for production.
+-   🆔 **Advanced Identity Control**: **Fully** customize **App Name**, **Package ID**, and **Minimum SDK**.
+-    **Auto-Density Scaling**: **Resizes logos automatically** for all **Android screen densities**.
+-   📱 **PC/Mobile-Responsive**: The **remote web interface** is **fully optimized** for **both PC** and **smartphone browsers**, featuring a **touch-friendly layout, adaptive navigation tabs**, and **scalable UI elements** for monitoring **from any device**.
 
 ---
 
@@ -46,7 +46,7 @@
 -   👻 **Ghost Operations/Controller**:
     -   **Ghost Screen Control/Mirror**: **Cast & control the live screen remotely** with **NO "Consent Prompt" required**.
     -   **Blackout Mode**: A **high-stealth mode** designed to **physically mask the targets device display** while maintaining a **non-masked live remote feed**.
-    -   **NEW! Ghost Toast Protocol**: Dispatch **tactical, persistent overlays**. Supports **Custom Colors, Animations (Pop, Static, Scroll)**, and **Chaotic "Burnt Toast" mode** *(multiple random spawns to overwhelm the target)*.
+    -   **NEW! GhostToast Protocol**: Dispatch **tactical, persistent overlays**. Supports **Custom Colors, Animations (Pop, Static, Scroll)**, and **Chaotic "Burnt Toast" mode** *(multiple random spawns to overwhelm the target)*.
     -   **NEW! Remote System Denial Lock**: Deploy a **persistent, full-screen security overlay** to **lock physical interaction** and **render the device inoperable until hard-reset/restarted** or **unlocked remotely from the C2 dashboard**.
     -   **Live Keylogging**: Intercept **keystrokes** and **system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for **browser login info**.
 -   🧪 **NEW!** **Exploit Factory Tab**:
@@ -62,7 +62,7 @@
 -   📸 **Tactical Surveillance Hub (v1.5.1 Ultra-Stability)**
     -   **Covert Recording**: Stealthily **record video without any user-facing** activity.
     -   **Snap Photos**: Covert **image capture integrated** into the live stream.
-    -   **Nightmode V2**: Aggressive **electronic brightening** for **low-light** environments. Now features **Hardware Breathe Sync** and **AE Bypass** for zero-freeze operation on **modern high-latency sensors**.
+    -   **Nightmode V2**: Aggressive **electronic brightening** for **low-light environments**. Now features **Hardware Breathe Sync** and **AE Bypass** for **zero-freeze operation** on **modern high-latency sensors**.
 -   🎙️ **Acoustics & Interception**: **Live microphone recording** and **automated call recording** for both **incoming and outgoing** calls.
 -   📂 **Advanced Data Uplink**:
     -   **Integrated File Manager**: **Navigate, download**, and **manage files**. Features an instant **Search Bar** and **Category Filters**.
@@ -81,23 +81,23 @@
 
 ### 🔄 **Remote Server Restart**
 
--   **Web UI**: One-click **"RESTART_SERVER"** button on the **Terminal tab** to refresh background services.
+-   **Web UI**: One-click **"RESTART_SERVER"** button on the **Terminal tab** to refresh **background services**.
 -   **SMS Backdoor**: Send an SMS/Text containing `!RESTART_C2` to the **devices number** to **force the server back online** even if it was **manually closed or killed by the OS**.
 
 ### 🛠️ **NEW!** **Termux Bridge Integration**
 
 **Lab-RATS** now features a **high-performance bridge to the Termux environment**. If **Termux is installed on the target device**, the remote terminal can **instantly elevate its capabilities**:
 -   **Auto-Routing**: Common commands like `pkg`, `apt`, `pip`, and `python` are automatically routed through the bridge.
--   **Unrestricted Tools**: Install and run **Python scripts, Nmap scans, or Metasploit** directly from the C2 web terminal.
+-   **Unrestricted Tools**: Install and run **Python scripts, Nmap scans, or Metasploit** directly from the **C2 web terminal**.
 -   **Persistent Environment**: Full support for **Termux's internal storage** and **standard Linux binaries**.
 
 ### 🖥️ **Enhanced Remote Shell**
 
-The **Terminal Tabs Built-in Shell has been overhauled** for professional workflows:
+The **Terminal Tabs Built-in Shell has been overhauled** for **professional workflows**:
 -   **Command History**: Navigate previous commands instantly using **Up/Down arrows**.
 -   **System Diagnostics**: New `sysinfo` command for an aggregated hardware/software overview.
 -   **Modernized Interface**: Updated to `root@Android` prompt with a built-in `help` menu.
--   **Hardened I/O**: Multi-stage retry logic and unique execution tracking for zero-latency command output.
+-   **Hardened I/O**: **Multi-stage retry logic** and unique **execution tracking** for **zero-latency command output**.
 
 ---
 
@@ -218,18 +218,16 @@ Once the **Target device** downloads the APK:
 
 ## ⭐ **Support the Development**
 
-If you find **Lab-RATS awesome** and **useful for your security research**, **please Star ⭐ the project**—it drives **further development!!**
+If you find **Lab-RATS awesome** and **useful for your security research**, **please Star ⭐ the project**—it **drives further development!!**
 
-### **Contributions**
+### **Contributions:**
 **Bug reports, add new feature** and **pull requests** are **always welcome!**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-STAR/CONTRIBUTING.md) for more info)*
 
----
-
-### **Donations**
+### **Donations:**
 
 **BuyMeACoffee**: https://buymeacoffee.com/k4n3co
 
-**BTC**:
+**Bitcoin**:
 
 ```
 bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
@@ -364,8 +362,15 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 ---
 
 ## ⚠️ **Disclaimer**
-This tool is for **educational and authorized security testing purposes ONLY**. The **developers** assume **NO responsibility** for **ANY** **misuse, damage to devices or relationships** caused by this software. **Please use it responsibly**. **Thank you!**
+
+This tool is for **educational and authorized security testing purposes ONLY!**. The **developers & contributors** assume **NO responsibility** for **ANY** **misuse, damage to devices or relationships** caused by this software. **Please use it responsibly**. **Thank you!**
 
 ---
 
-© 2026 **K4N3CO.LABS**
+## 📄 **License**
+
+This project is **licensed** to **K4N3CO** under the [MIT License](LICENSE).
+
+---
+
+© 2026 **K4N3CO**
