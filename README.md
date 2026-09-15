@@ -177,7 +177,7 @@ function handleRequest(e) {
 3.  **Execute** the builder: `chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
 4.  **Select a Build Strategy**:
     *   **Option 1 (Manual)**: For basic configuration of App Name, ID, and Logo before building.
-    *   **Option 5 (Automated Wizard)**: For the full **Build → Host → Weaponize** flow.
+    *   **Option 6 (Automated Wizard)**: For the full **Build → Host → Weaponize** flow.
 5.  Enter your **Google Sheet Webhook URL** when prompted to enable remote device reporting.
 6.  Retrieve your `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `/apk-builder/output/` directory.
 
@@ -186,15 +186,15 @@ function handleRequest(e) {
 **Deployment is a multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
 #### **A. **NEW!** Strategic Weaponization** (The Wrapper)
-Standard `.apk` files are **often blocked by email filters and browser security**. Use the **Wizard (Option 5)** in the `apk-builder` to wrap your link inside a **high-compatibility carrier file**:
+Standard `.apk` files are **often blocked by email filters and browser security**. Use the **Wizard (Option 6)** in the `apk-builder` to wrap your link inside a **high-compatibility carrier file**:
 *   **📑 Stealth PDF (Highly Recommended)**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download**, bypassing **standard PDF security filters**.
 *   **🎬 Zero-Click MP4**: Send as a **video file**. It exploits mobile **Media Heap Overflows** during gallery **indexing or thumbnail generation** to **force-register the C2 link in the background**.
 *   **🗓️ Meeting Invite (ICS)**: Injects a **persistent event** into the **target's Calendar with automated reminders** and a **weaponized "Security Review" link**.
-*   **🔳 QR Code / 📡 NFC**: Best for physical placement or **"Tap-to-Infect" proximity delivery**. Generates a high-density QR or NDEF record pointing to the hardened delivery URL.
-*   **And many more**: The wizard also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document** macros.
+*   **🔳 QR Code / NFC**: Best for **physical placement** or **"Tap-to-Infect" proximity delivery**. Generates a **high-density QR or NDEF record** pointing to the hardened delivery URL.
+*   **And many more**: The **wizard** also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document** macros.
 
 #### **B. Hosting Strategies**
-*   **Anonymous Cloud**: Option 5 uses **Catbox.moe** by default. It is **anonymous, fast**, and **generates a direct link**.
+*   **Anonymous Cloud**: Option 6 uses **Catbox.moe** by default. It is **anonymous, fast**, and **generates a direct link**.
 *   **P2P Direct**: Host the **APK directly from your PC using a public tunnel**, or from another infected device using the `/download/` endpoint.
 
 #### **C. Installation & Initialization**
@@ -221,13 +221,14 @@ Once the **Target device** downloads the APK:
 If you find **Lab-RATS awesome** and **useful for your security research**, **please Star ⭐ the project**—it **drives further development!!**
 
 ### **Contributions:**
+
 **Bug reports, add new feature** and **pull requests** are **always welcome!**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-STAR/CONTRIBUTING.md) for more info)*
 
-### **Donations:**
+### **Donate:**
 
-**BuyMeACoffee**: https://buymeacoffee.com/k4n3co
+☕️ **BuyMeACoffee**: https://buymeacoffee.com/k4n3co
 
-**Bitcoin**:
+**Bitcoin (₿)**:
 
 ```
 bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
@@ -252,7 +253,7 @@ https://github.com/user-attachments/assets/366df760-df71-455e-aae9-3acf3ef6ed26
 
 ---
 
-### Lab-RATS versus Fully-Patched App Security:
+### 💀 Lab-RATS versus Fully-Patched App Security:
 
 https://github.com/user-attachments/assets/5df5613a-a639-4c80-96ac-50c7a0d015b1
 
@@ -367,7 +368,7 @@ This tool is for **educational and authorized security testing purposes ONLY!**.
 
 ---
 
-## 📄 **License**
+## 🪪 **License**
 
 This project is **licensed** to **K4N3CO** under the [MIT License](LICENSE).
 
