@@ -11,7 +11,6 @@
 <img src="https://img.shields.io/badge/Mode-Stealth_FUD-black?style=for-the-badge&logo=ghost&logoColor=white">
 <img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black">
 <img src="https://img.shields.io/badge/Donate-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white">
-  <p align="center">
 <img src="https://img.shields.io/badge/K4N3CO-LabRATS-cyan?style=for-the-badge&logo=probot&logoColor=white">
 
 # Lab-RATS
