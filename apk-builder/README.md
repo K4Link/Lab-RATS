@@ -89,6 +89,9 @@ cd Lab-RATS-main/apk-builder
 chmod +x build.sh
 ./build.sh
 ```
+### APK-Builder Example (Macbook-Air M2)
+
+https://github.com/user-attachments/assets/891459a2-4769-4dd3-8679-f586eca81efc
 
 ---
 
