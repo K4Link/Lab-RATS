@@ -1,8 +1,4 @@
-<p align="center">
-  <a href="https://postimg.cc/nC9DNBkn">
-    <img src="https://i.postimg.cc/RVXL6TJJ/ic-launcher-playstore.png" alt="ic-launcher-playstore.png" />
-  </a>
-</p>
+[![0-Lab-RATS-Header.png](https://i.postimg.cc/Y9chdzww/0-Lab-RATS-Header.png)](https://postimg.cc/Z9cbR3Rf)
 
 # Lab-RATS
 
@@ -236,12 +232,12 @@ bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
 
 ---
 
-## 📸 **Screenshots/Video Clips**
+## 📸 **Screenshots / Video Clips**
 
 ### Example APK build in Terminal (Mac OS):
-> *This build excludes my Google Sheet Webhook URL for security. For normal private builds, you must add your own Google webhook URL to correctly receive the IPv6 address link from the app after installation.*
+> *This build excludes my Google Sheet Webhook URL for security. For standard private builds, you must add your own Google webhook URL *(instructions above)* to correctly receive the IPv6 address link from the app after installation.*
 
-https://github.com/user-attachments/assets/366df760-df71-455e-aae9-3acf3ef6ed26
+https://github.com/user-attachments/assets/45419d9f-df4f-478e-8e69-d3c42ef09bdb
 
 ---
 
@@ -250,12 +246,6 @@ https://github.com/user-attachments/assets/366df760-df71-455e-aae9-3acf3ef6ed26
 <p align="center">
 <a href="https://postimg.cc/zySrqv1Z" target="_blank"><img src="https://i.postimg.cc/zySrqv1Z/App-installed-Running.png" alt="App-installed-Running"></a>
 <a href="https://postimg.cc/PLXkJHdS" target="_blank"><img src="https://i.postimg.cc/PLXkJHdS/App-installed-Offline.png" alt="App-installed-Offline"></a>
-
----
-
-### 💀 Lab-RATS versus Fully-Patched App Security:
-
-https://github.com/user-attachments/assets/5df5613a-a639-4c80-96ac-50c7a0d015b1
 
 ---
 
@@ -279,43 +269,43 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 
 ### Terminal/Homepage Tab:
 
-[![01-Terminal-Tab.png](https://i.postimg.cc/gkqgDDH7/01-Terminal-Tab.png)](https://postimg.cc/3dNjr26j)
+[![01-Terminal-Tab.png](https://i.postimg.cc/mDwB7YLQ/01-Terminal-Tab.png)](https://postimg.cc/LYncpZZX)
 
 ---
 
 ### Ghost Operations Tab:
 
-[![02-Ghost-Tab.png](https://i.postimg.cc/3JCtBBFf/02-Ghost-Tab.png)](https://postimg.cc/PPJbf1c1)
+[![02-Ghost-Tab.png](https://i.postimg.cc/SNbHm2ms/02-Ghost-Tab.png)](https://postimg.cc/MXt9DGM2)
 
 ---
 
 ### Optics/Live Camera Stream Tab:
 
-[![03-Optics-Tab.png](https://i.postimg.cc/QxkfbbJw/03-Optics-Tab.png)](https://postimg.cc/kBGNMWZv)
+[![03-Optics-Tab.png](https://i.postimg.cc/BQfRJLJH/03-Optics-Tab.png)](https://postimg.cc/4nwW537x)
 
 ---
 
 ### Locate/Live GPS Tab:
 
-[![04-Locate-Tab.png](https://i.postimg.cc/nhF0wD31/04-Locate-Tab.png)](https://postimg.cc/vcKr4cF1)
+[![04-Locate-Tab.png](https://i.postimg.cc/QxgwC8MS/04-Locate-Tab.png)](https://postimg.cc/gnJNBP86)
 
 ---
 
 ### (NEW!) Exploit Factory Tab:
 
-[![05-Exploits-Tab.png](https://i.postimg.cc/4xfBF9WB/05-Exploits-Tab.png)](https://postimg.cc/rKH1DKXr)
+[![05-Exploits-Tab.png](https://i.postimg.cc/dQyzMmct/05-Exploits-Tab.png)](https://postimg.cc/c6dDw3JV)
 
 ---
 
 ### Data/Storage Tab:
 
-[![06-Data-Tab.png](https://i.postimg.cc/nhF0wD33/06-Data-Tab.png)](https://postimg.cc/ZCQ8WCtN)
+[![06-Data-Tab.png](https://i.postimg.cc/L6FGmYmZ/06-Data-Tab.png)](https://postimg.cc/F1GTZKd9)
 
 ---
 
 ### Intel/App Notifications Tab:
 
-[![07-Intel-Tab.png](https://i.postimg.cc/HkYBPy6Z/07-Intel-Tab.png)](https://postimg.cc/56rBX6dL)
+[![07-Intel-Tab.png](https://i.postimg.cc/SNL3RSKY/07-Intel-Tab.png)](https://postimg.cc/w7v0bdL9)
 
 ---
 
@@ -327,13 +317,13 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 
 ### MMS/Multimedia Message Tab:
 
-[![09-MMS-Tab.png](https://i.postimg.cc/BnSMwKmk/09-MMS-Tab.png)](https://postimg.cc/WhyGdhLw)
+[![09-MMS-Tab.png](https://i.postimg.cc/bN0Wryvx/09-MMS-Tab.png)](https://postimg.cc/F7RDnQ3z)
 
 ---
 
 ### Acoustics/Audio Tab:
 
-[![10-Acoustics-Tab.png](https://i.postimg.cc/zGz0Pgx9/10-Acoustics-Tab.png)](https://postimg.cc/VdhqJdQR)
+[![10-Acoustics-Tab.png](https://i.postimg.cc/yYhtx1Nj/10-Acoustics-Tab.png)](https://postimg.cc/TpwCHXg5)
 
 ---
 
@@ -351,7 +341,7 @@ https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
 
 ### Hardware/Device Info Tab:
 
-[![13-Hardware-Tab.png](https://i.postimg.cc/VkfDHC7m/13-Hardware-Tab.png)](https://postimg.cc/ykGmDk4b)
+[![13-Hardware-Tab.png](https://i.postimg.cc/Hs0RnYLf/13-Hardware-Tab.png)](https://postimg.cc/ykdvrzcP)
 
 ---
 
