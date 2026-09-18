@@ -234,7 +234,7 @@ bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
 
 ## 📸 **Screenshots / Video Clips**
 
-### Example APK build in Terminal (Mac OS):
+### Signed APK build (Macbook Air M2):
 > *This build excludes my Google Sheet Webhook URL for security. For standard private builds, you must add your own Google webhook URL *(instructions above)* to correctly receive the IPv6 address link from the app after installation.*
 
 https://github.com/user-attachments/assets/45419d9f-df4f-478e-8e69-d3c42ef09bdb
@@ -261,9 +261,10 @@ https://github.com/user-attachments/assets/45419d9f-df4f-478e-8e69-d3c42ef09bdb
 
 ## Remote Web Control (C2) Dashboard - PC Interface
 
-### Remote C2 Panel Video:
+### Remote C2 Dashboard Clips:
 
-https://github.com/user-attachments/assets/5d8f33c7-f4a6-4df5-ab55-69e317ca7874
+<img width="400" height="224" alt="Screen Recording 2026-09-18 at 3 17 44 AM" src="https://github.com/user-attachments/assets/c1b163b7-3c96-4131-9d42-6c31ef187947" /> <img width="400" height="224" alt="Screen Recording 2026-09-18 at 3 17 44 AM (1)" src="https://github.com/user-attachments/assets/f8bed65a-a79e-495b-a447-431016ef1d83" />
+
 
 ---
 
