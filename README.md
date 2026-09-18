@@ -239,9 +239,12 @@ If you find **Lab-RATS awesome** and **useful for your security research**, **pl
 
 ### **Donate:**
 
-☕️ **BuyMeACoffee**: https://buymeacoffee.com/k4n3co
+<img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black">
 
-**Bitcoin (₿)**:
+https://buymeacoffee.com/k4n3co
+
+
+<img src="https://img.shields.io/badge/Donate-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white">
 
 ```
 bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
