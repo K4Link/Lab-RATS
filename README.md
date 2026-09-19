@@ -33,7 +33,7 @@
 - Implemented a **masked credential handshake**. Passwords are **reversed and Base64 encoded** (`0x_` prefixed) on the client-side before transmission, rendering them **invisible to browser Network/Payload inspectors**.
 
 ### 📦 **Automated APK Generation**:
-- **Instantly build** `signed.apk` for production.
+- **Instantly builds** `signed.apk` for **production** and **testing**.
 
 ### 🆔 **Advanced Identity Control**:
 - **Fully** customize **App Name**, **Package ID**, and **Minimum SDK**.
@@ -66,7 +66,7 @@
 
 ### ☎️ **Emergency Recovery Hub**:
 - **Icon Restore**: If the **launcher icon is in Stealth Mode**, **dial `*#1337#` on the devices dialpad** to **instantly** restore the **Lab-RATS dashboard**.
-- **Hidden Backdoor**: Every decoy features a **secret bypass**. **Rapidly tapping the middle of the decoy screen display 10 times instantly unlocks** the **C2 server interface**. *(Reverts back to stealth mode again when closed)*.
+- **Hidden Backdoor**: **Every decoy** features a **secret bypass**. **Rapidly tapping the middle of the decoy screen display 10 times instantly unlocks** the **C2 server interface**. *(Reverts back to stealth mode again when closed)*.
     
 ### 👻 **Task-List Ghosting**: 
 - The app is **hard-coded** to be **invisible in the Android "Recent Apps" list**.
@@ -127,8 +127,8 @@
 
 ### 🔄 **Remote Server Restart**
 
--   **Web UI**: One-click **"RESTART_SERVER"** button on the **Terminal tab** to refresh **background services**.
--   **SMS Backdoor**: Send an **SMS/Text** containing `!RESTART_C2` to the **devices number** to **force the server back online** even if it was **manually closed or killed by the OS**.
+- **Web UI**: One-click **"RESTART_SERVER"** button on the **Terminal tab** to refresh **background services**.
+- **SMS Backdoor**: Send an **SMS/Text** containing `!RESTART_C2` to the **devices number** to **force the server back online** even if it was **manually closed or killed by the OS**.
 
 ### 🛠️ **NEW!** **Termux Bridge Integration**
 
