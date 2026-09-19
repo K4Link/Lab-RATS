@@ -48,7 +48,7 @@
 
 ## 🕵️ Covert & Stealth Operations
 
-###💉 **NEW!** **Payload Delivery Vectors** *(for installing APK onto Target Device)*:
+### 💉 **NEW!** **Payload Delivery Vectors** *(for installing APK onto Target Device)*:
 - The **weaponization engine** has been **overhauled** to support **multiple high-success delivery methods** *(Stealth PDF, Zero-Click MP4, Meeting Invite and Many More)*, ensuring **reliable access** across **all modern mobile environments**.
 
 ### 🛡️  **Evasion Engine**:
@@ -205,6 +205,7 @@ function handleRequest(e) {
   }
 }
 ```
+
 3.  Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(your E-mail)* → **Who has Access: Anyone**.
 4.  **Important**: **Copy** the **Google Sheet Webhook URL** and **prepare to Paste it** into the **apk-builder** tool **when prompted**. *(Next Section)*
 
@@ -222,10 +223,10 @@ function handleRequest(e) {
 2.  **Navigate** to `cd /Lab-RATS-main/apk-builder/`
 3.  **Execute** the builder: `chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
 4.  **Select a Build Strategy**:
-    *   **Option 1 (Manual)**: For basic configuration of App Name, ID, and Logo before building.
-    *   **Option 6 (Automated Wizard)**: For the full **Build → Host → Weaponize** flow.
-5.  Enter your **Google Sheet Webhook URL** when prompted to enable remote device reporting.
-6.  Retrieve your `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `/apk-builder/output/` directory.
+    *   **Option 1 (Manual)**: For **basic configuration** of **App Name, ID**, and **Logo** before building.
+    *   **Option 6 (Automated Wizard)**: For the **full Build → Host → Weaponize** flow.
+5.  Enter your **Google Sheet Webhook URL** **when prompted** to enable **remote device reporting**.
+6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `/apk-builder/output/` directory.
 
 ### 3. Deploying & Installing onto Android Device
 
@@ -251,8 +252,8 @@ Once the **Target device** downloads the APK:
 1.  **Manual Sideload**: If you have **physical access to the device**, use `adb install signed_payload.apk`.
 2.  **Permissions (Critical)**: Open the app **once**. It will **prompt for necessary permissions** *(Camera, SMS, Files, etc)*.
     *   **Remote Permission Prompt**: If the **user skips a permission**, you can **remotely trigger the system prompt again** from the **Ghost Tab** using the **REPAIR PERMISSIONS** button.
-3.  **Self-Vanishing**: 5 seconds after launch, the app will automatically **replace its icon and name** with the decoy you chose during build *("System Update", "Calculator")*. The original icon you chose during the build will **disappear from the launcher**.
-4.  **Uplink Confirmation**: Check your **Google Sheet**. Within 10 seconds of initialization, the **active IPv6 address and hardware status will appear in the log**.
+3.  **Self-Vanishing**: 5 seconds after launch, the app will **automatically replace its icon and name** with the **decoy you chose** during build *("System Update", "Calculator")*. The original icon you chose during the build will **disappear from the launcher**.
+4.  **Uplink Confirmation**: Check your **Google Sheet**. Within **10 seconds of initialization**, the **active IPv6 address and hardware status will appear in the log**.
 
 ---
 
@@ -278,7 +279,7 @@ If you find **Lab-RATS awesome** and **useful for your security research**, **pl
 
 <img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black">
 
-https://buymeacoffee.com/k4n3co
+**https://buymeacoffee.com/k4n3co**
 
 
 <img src="https://img.shields.io/badge/Donate-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white">
