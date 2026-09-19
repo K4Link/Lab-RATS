@@ -6,11 +6,11 @@
 <img src="https://img.shields.io/badge/Android-SDK_34-3DDC84?style=for-the-badge&logo=android&logoColor=white">
 <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
 <img src="https://img.shields.io/badge/Focus-Remote_Access-red?style=for-the-badge&logo=airplayvideo&logoColor=white">
+ <p align="center">
 <img src="https://img.shields.io/badge/Security-AES_256-blueviolet?style=for-the-badge&logo=dependencycheck&logoColor=white">
 <img src="https://img.shields.io/badge/Network-Direct_IPv6-informational?style=for-the-badge&logo=p2p&logoColor=white">
 <img src="https://img.shields.io/badge/Mode-Stealth_FUD-black?style=for-the-badge&logo=ghost&logoColor=white">
-<img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black">
-<img src="https://img.shields.io/badge/Donate-Bitcoin-F7931A?style=for-the-badge&logo=bitcoin&logoColor=white">
+ <p align="center">
 <img src="https://img.shields.io/badge/K4N3CO-LabRATS-cyan?style=for-the-badge&logo=probot&logoColor=white">
 
 # Lab-RATS
