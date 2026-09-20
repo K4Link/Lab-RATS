@@ -14,7 +14,6 @@
 <img src="https://img.shields.io/badge/Network-Direct_IPv6-darkred?style=for-the-badge&logo=p2p&logoColor=white">
 <img src="https://img.shields.io/badge/Mode-Stealth_FUD-orange?style=for-the-badge&logo=ghost&logoColor=white">
 <p align="center">
-<img src="https://img.shields.io/badge/Lab-RATS-cyan?style=for-the-badge&logo=xfce&logoColor=white">
 
 # Lab-RATS
 
@@ -427,7 +426,7 @@ This project is **licensed** to **K4N3CO** under the [MIT License](LICENSE).
 ---
 
 <p align="center">
-  <b><img src="https://img.shields.io/badge/Developed By-K4N3CO ©2026-darkred?style=for-the-badge&logo=maserati&logoColor=white">
+  <b><img src="https://img.shields.io/badge/Developed By-K4N3CO.LABS ©2026-darkred?style=for-the-badge&logo=maserati&logoColor=white">
 </b><br>
 
 <p align="center"> 
