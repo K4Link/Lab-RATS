@@ -147,10 +147,11 @@ The **Terminal Tabs Built-in Shell has been overhauled** for **professional work
 
 ---
 
-## 📊 **Google Sheet Setup Instructions**
+## 📊 **Google Sheet Setup Instructions** 
+> ** **IMPORTANT**: **To receive the Web UI link you must complete the setup below and Copy** the **Google Sheet Webhook URL it provides you with**. Next **prepare to Paste it into the apk-builder tool** *(Getting Started Section Below)* **when prompted**.
 
-1.  **Create** a new [Google Sheet](https://docs.google.com/spreadsheets/u/0/) for **IP Tracking**.
-2.  Go to **Extensions** → **Apps Script** and **Paste in the Hybrid Snippet below:** *(Supports both GET and POST)*
+1.  To Begin **Create a new** [Google Sheet](https://docs.google.com/spreadsheets/u/0/) it will be used for **IP Tracking and receiving the Web UI link**.
+2.  Go to **Extensions** → **Apps Script** → **Paste in the Hybrid Snippet below:** *(Supports both GET and POST)*
 
 ```javascript
 function doGet(e) {
@@ -206,8 +207,8 @@ function handleRequest(e) {
 }
 ```
 
-3.  Click **Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(your E-mail)* → **Who has Access: Anyone**.
-4.  **Important**: **Copy** the **Google Sheet Webhook URL** and **prepare to Paste it** into the **apk-builder** tool **when prompted**. *(Next Section)*
+3.  **Click Deploy** → **New Deployment** → **Web App** → **Execute as Me** *(your E-mail)* → **Who has Access: Anyone**.
+4.  **Copy** the **Google Sheet Webhook URL it provides you with**, then **prepare to Paste it into the apk-builder tool**. *(Next section)*
 
 ---
 
@@ -221,7 +222,7 @@ function handleRequest(e) {
 ### 2. Building the APK (on PC)
 1.  **Download & Extract** the repository.
 2.  **Navigate** to `cd /Lab-RATS-main/apk-builder/`
-3.  **Execute** the builder: `chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
+3.  **Execute** the apk-builder tool: `chmod +x build.sh && ./build.sh` (Mac/Linux) or `build.bat` (Windows).
 4.  **Select a Build Strategy**:
     *   **Option 1 (Manual)**: For **basic configuration** of **App Name, ID**, and **Logo** before building.
     *   **Option 6 (Automated Wizard)**: For the **full Build → Host → Weaponize** flow.
@@ -233,7 +234,6 @@ function handleRequest(e) {
 **Deployment is a multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
 ### **A. **NEW!** Strategic Weaponization** (The Wrapper)
-
 Standard `.apk` files are **often blocked by email filters and browser security**. Use the **Wizard (Option 6)** in the `apk-builder` to wrap your link inside a **high-compatibility carrier file**:
 *   **📑 Stealth PDF (Highly Recommended)**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download**, bypassing **standard PDF security filters**.
 *   **🎬 Zero-Click MP4**: Send as a **video file**. It exploits mobile **Media Heap Overflows** during gallery **indexing or thumbnail generation** to **force-register the C2 link in the background**.
@@ -293,7 +293,7 @@ bc1q6lmkuju3kf7f8624fwt5qs7k5mf63mekgcnzf4
 ## 📸 **Screenshots & Video Clips**
 
 ### Signed APK build (Macbook Air M2):
-> *This build excludes my Google Sheet Webhook URL for security. For standard private builds, you must add your own Google webhook URL *(instructions above)* to correctly receive the IPv6 address link from the app after installation.*
+> ** **IMPORTANT** *This build excludes my Google Sheet Webhook URL for security. For standard private builds, you must add your own Google webhook URL *(instructions above)* to correctly receive the IPv6 address link from the app after installation.*
 
 https://github.com/user-attachments/assets/45419d9f-df4f-478e-8e69-d3c42ef09bdb
 
