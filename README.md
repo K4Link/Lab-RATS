@@ -14,6 +14,9 @@
 <img src="https://img.shields.io/badge/Network-Direct_IPv6-darkred?style=for-the-badge&logo=p2p&logoColor=white">
 <img src="https://img.shields.io/badge/Mode-Stealth_FUD-orange?style=for-the-badge&logo=ghost&logoColor=white">
 <p align="center">
+  <a href="https://postimg.cc/BXNZCYDS">
+    <img src="https://i.postimg.cc/0y16Phyw/app-logo.png)" alt="ic-launcher-playstore.png" />
+  </a>
 
 # Lab-RATS
 
