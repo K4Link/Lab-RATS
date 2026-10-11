@@ -1,0 +1,16 @@
+{
+  "name": "lab-rats-c2-server",
+  "version": "1.6.0",
+  "description": "Tactical Node.js C2 Backend & Relay Server for Lab-RATS (Render / Railway / Fly.io compatible)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
