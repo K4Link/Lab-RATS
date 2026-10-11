@@ -81,7 +81,7 @@ function saveData() {
 // Load persisted state on startup
 loadData();
 
-// Device polls for pending proxy commands (supports both /tunnel-poll and /checkin/tunnel-poll)
+// Device polls for pending proxy commands
 app.get('/tunnel-poll', handleTunnelPoll);
 app.get('/checkin/tunnel-poll', handleTunnelPoll);
 
@@ -98,7 +98,7 @@ function handleTunnelPoll(req, res) {
     }
 }
 
-// Device posts command response back (supports both /tunnel-response and /checkin/tunnel-response)
+// Device posts command response back
 app.post('/tunnel-response', handleTunnelResponse);
 app.post('/checkin/tunnel-response', handleTunnelResponse);
 
@@ -327,8 +327,10 @@ app.get('/', (req, res) => {
     return serveDashboard(req, res);
 });
 app.get('/checkin', handleCheckin);
+app.get('/checkin/', handleCheckin);
 app.post('/', handleCheckin);
 app.post('/checkin', handleCheckin);
+app.post('/checkin/', handleCheckin);
 
 // JSON Health check endpoint
 app.get('/api/status', (req, res) => {
