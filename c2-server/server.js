@@ -54,7 +54,7 @@ app.post('/tunnel-response', (req, res) => {
     }
 });
 
-// Secure HTTP-over-Polling Reverse Proxy Route for Render Dashboard (with auto-registration fallback)
+// Secure HTTP-over-Polling Reverse Proxy Route for Render Dashboard
 app.all('/proxy*', (req, res) => {
     let deviceId = req.query.deviceId;
     if (!deviceId && devices.size > 0) {
@@ -141,6 +141,10 @@ app.get('/', (req, res) => {
     <title>LAB-RATS | C2 COMMAND RELAY</title>
     <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/c2/style.css">
+    <style>
+        th { padding: 14px 20px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.7rem !important; letter-spacing: 2px !important; text-transform: uppercase !important; white-space: nowrap !important; }
+        td { padding: 14px 20px !important; white-space: nowrap !important; }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -155,11 +159,11 @@ app.get('/', (req, res) => {
                 <table>
                     <thead>
                         <tr>
-                            <th>DEVICE / MODEL</th>
+                            <th>DEVICE ID</th>
                             <th>MODEL</th>
                             <th>OS VERSION</th>
                             <th>BATTERY</th>
-                            <th>ENDPOINT IP:PORT</th>
+                            <th>ENDPOINT IP</th>
                             <th>PROFILE</th>
                             <th>LAST CHECK-IN</th>
                             <th>ACTION</th>
