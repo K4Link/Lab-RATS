@@ -14,6 +14,12 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/c2', express.static(path.join(__dirname, 'c2')));
 
+// Real-time request logger for debugging Render traffic
+app.use((req, res, next) => {
+    console.log(`[INCOMING] ${req.method} ${req.url} | Query:`, req.query, '| Body:', req.body);
+    next();
+});
+
 // In-memory telemetry, device registry, command queues, and pending responses (with disk persistence for Render)
 const devices = new Map();
 const commandQueues = new Map(); // deviceId -> array of requests
