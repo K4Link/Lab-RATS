@@ -167,33 +167,38 @@ app.get('/api/status', (req, res) => {
     });
 });
 
-// Device Check-in & Telemetry Ingestion endpoint
-app.post('/checkin', (req, res) => {
+// Device Check-in & Telemetry Ingestion endpoints (supports both / and /checkin)
+app.post('/', handleCheckin);
+app.post('/checkin', handleCheckin);
+
+function handleCheckin(req, res) {
     try {
         const data = req.body;
-        const deviceId = data.deviceId || 'unknown_device';
+        const queryData = req.query;
+        const merged = { ...queryData, ...data };
+        const deviceId = merged.deviceId || merged.device || queryData.device || 'unknown_device';
 
         devices.set(deviceId, {
-            ...data,
+            ...merged,
             lastSeen: new Date().toISOString()
         });
 
         telemetryLogs.unshift({
             timestamp: new Date().toISOString(),
             deviceId,
-            type: data.type || 'checkin',
-            payload: data
+            type: merged.type || 'checkin',
+            payload: merged
         });
 
         if (telemetryLogs.length > 500) telemetryLogs.pop();
 
-        console.log(`[CHECKIN] Device ID: ${deviceId} | Model: ${data.model} | IP: ${data.ip}`);
+        console.log(`[CHECKIN] Device ID: ${deviceId} | Model: ${merged.model || merged.device} | IP: ${merged.ip}`);
         res.json({ success: true, message: 'Telemetry received successfully' });
     } catch (err) {
         console.error('[ERROR] Checkin failed:', err.message);
         res.status(400).json({ success: false, error: err.message });
     }
-});
+}
 
 // List active connected devices (JSON)
 app.get('/devices', (req, res) => {
