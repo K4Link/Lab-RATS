@@ -31,11 +31,20 @@ let _ac = false;
 let audioStream = null;
 let _ih = null;
 
-// Session Stability: window.fetch wrapper for handling 401/Login redirects by auto-refreshing
+// Session Stability & Render Proxy Fetch Wrapper
 const originalFetch = window.fetch;
-window.fetch = async function(...args) {
+window.fetch = async function(resource, init) {
+  let url = resource;
+  if (typeof url === 'string' && url.startsWith('/') && !url.startsWith('/proxy') && !url.startsWith('/c2/')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const deviceId = urlParams.get('deviceId');
+    if (deviceId) {
+      const sep = url.includes('?') ? '&' : '?';
+      url = `/proxy${url}${sep}deviceId=${deviceId}`;
+    }
+  }
   try {
-    const response = await originalFetch(...args);
+    const response = await originalFetch(url, init);
     if (response.status === 401) {
       showToast("SESSION_EXPIRED: Re-authenticating...", "error");
       setTimeout(() => {
@@ -47,6 +56,25 @@ window.fetch = async function(...args) {
     throw error;
   }
 };
+
+// Render Proxy Link Interceptor
+if (window.location.pathname.startsWith('/proxy')) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const deviceId = urlParams.get('deviceId');
+  if (deviceId) {
+    document.addEventListener('click', function(e) {
+      const anchor = e.target.closest('a');
+      if (anchor && anchor.getAttribute('href') && anchor.getAttribute('href').startsWith('/')) {
+        const href = anchor.getAttribute('href');
+        if (!href.startsWith('/proxy') && !href.startsWith('/c2/')) {
+          e.preventDefault();
+          const sep = href.includes('?') ? '&' : '?';
+          window.location.href = `/proxy${href}${sep}deviceId=${deviceId}`;
+        }
+      }
+    });
+  }
+}
 
 // UI Info Popup
 function showInfo(e, t, o) {

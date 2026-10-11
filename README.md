@@ -219,9 +219,13 @@ function handleRequest(e) {
 ### ✌🏻 Option 2: Tactical Node.js Backend (Advanced)
 **Best for professional fleet management** and **Automatic File Exfiltration**.
 
-1.  **Host the Backend**: Use **the source code** in the `/c2-server` directory. You can **host this on platforms** like **Render**, **Railway**, or **your own VPS**.
-2.  **Get your URL**: Once your **service is live**, copy the URL (e.g., `https://labrats-c2.onrender.com`).
-3.  **Hard-code the Link**: **Enter the Render URL** into the **APK Builder** when **prompted** for the `WEBHOOK_URL`.
+**Quick Deployment on Render** (https://render.com)
+
+**1. Create a new Web Service on Render** and **connect your Lab-RATS repository**.
+<br>**2. Set the Root Directory** to c2-server.
+<br>**3. Set the Build Command** to `npm instal`l.
+<br>**4. Set the Start Command** to `npm start`.
+<br>**5. Deploy!** Once live, **copy your Render URL** (e.g., https://labrats-c2.onrender.com), then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL**.
 
 **Advantages of Option 2**:
 - 🌐 **Dual-Stack IP Binding**: **Full support for both IPv4 and IPv6 connections**, enabling **seamless C2 telemetry** and **reverse WebSocket tunneling** across **cellular carrier NAT64** and **dual-stack Wi-Fi networks**.
@@ -318,9 +322,7 @@ https://github.com/user-attachments/assets/6f88173d-765e-4a67-b9c2-24404c81480f
 
 ---
 
-## Remote C2 Dashboard (PC Interface)
-
-### C2 Dashboard - Remote Shell & Decoys:
+### C2 Dashboard (PC Interface) - Remote Shell & Decoys:
 
 https://github.com/user-attachments/assets/ef14cf13-a614-4b20-aec2-003fa271312d
 
