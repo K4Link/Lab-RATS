@@ -223,7 +223,7 @@ function handleRequest(e) {
 
 **1. Create a new Web Service on Render** and **connect your Lab-RATS repository**.
 <br>**2. Set the Root Directory** to c2-server.
-<br>**3. Set the Build Command** to `npm instal`l.
+<br>**3. Set the Build Command** to `npm install`.
 <br>**4. Set the Start Command** to `npm start`.
 <br>**5. Deploy!** Once live, **copy your Render URL** (e.g., https://labrats-c2.onrender.com), then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL**.
 

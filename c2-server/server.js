@@ -81,8 +81,11 @@ function saveData() {
 // Load persisted state on startup
 loadData();
 
-// Device polls for pending proxy commands
-app.get('/tunnel-poll', (req, res) => {
+// Device polls for pending proxy commands (supports both /tunnel-poll and /checkin/tunnel-poll)
+app.get('/tunnel-poll', handleTunnelPoll);
+app.get('/checkin/tunnel-poll', handleTunnelPoll);
+
+function handleTunnelPoll(req, res) {
     const deviceId = req.query.deviceId;
     if (!deviceId) return res.json({});
 
@@ -93,10 +96,13 @@ app.get('/tunnel-poll', (req, res) => {
     } else {
         res.json({});
     }
-});
+}
 
-// Device posts command response back
-app.post('/tunnel-response', (req, res) => {
+// Device posts command response back (supports both /tunnel-response and /checkin/tunnel-response)
+app.post('/tunnel-response', handleTunnelResponse);
+app.post('/checkin/tunnel-response', handleTunnelResponse);
+
+function handleTunnelResponse(req, res) {
     try {
         const data = req.body;
         const requestId = data.id;
@@ -114,7 +120,7 @@ app.post('/tunnel-response', (req, res) => {
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
     }
-});
+}
 
 // Secure HTTP-over-Polling Reverse Proxy Route for Render Dashboard
 app.all('/proxy*', (req, res) => {

