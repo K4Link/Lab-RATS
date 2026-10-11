@@ -133,17 +133,12 @@ app.get('/', (req, res) => {
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="title">LAB-RATS // C2 RELAY</div>
-            <div class="subtitle">TACTICAL NODE.JS BACKEND (v1.6.0)</div>
+        <div class="header" style="text-align:center; padding:20px 0; margin-bottom:20px;">
+            <img src="/c2/header_dashboard.png" style="width: 90%; max-width: 900px; height: auto; margin: 0 auto; display: block; object-fit: contain;" alt="LAB-RATS Header">
+            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${devices.size}</span></div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div style="font-size: 0.8rem; color: #aaa;">SYSTEM STATUS: <span class="badge">ONLINE</span> &nbsp;|&nbsp; ACTIVE TARGETS: <span style="color: var(--neon-cyan); font-weight: bold;">${devices.size}</span></div>
-            <button class="refresh-btn" onclick="location.reload()">REFRESH_DASHBOARD</button>
-        </div>
-
-        <div class="card">
+        <div class="card" style="margin-top: 20px;">
             <h2>CONNECTED_TARGETS_REGISTRY</h2>
             <div style="overflow-x: auto;">
                 <table>
@@ -163,6 +158,9 @@ app.get('/', (req, res) => {
                         ${devicesHtml}
                     </tbody>
                 </table>
+            </div>
+            <div style="text-align: right; margin-top: 15px;">
+                <button class="btn" onclick="location.reload()" style="padding: 10px 25px; font-size: 0.75rem;">REFRESH_REGISTRY</button>
             </div>
         </div>
 
