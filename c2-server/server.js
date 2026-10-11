@@ -215,6 +215,7 @@ app.get('/api/status', (req, res) => {
 });
 
 // Device Check-in & Telemetry Ingestion endpoints (supports both / and /checkin)
+app.get('/checkin', (req, res) => res.json({ status: 'ACTIVE', message: 'C2 Check-in endpoint ready for POST telemetry.' }));
 app.post('/', handleCheckin);
 app.post('/checkin', handleCheckin);
 
