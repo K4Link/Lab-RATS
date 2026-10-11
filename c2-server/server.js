@@ -232,7 +232,14 @@ function handleCheckin(req, res) {
         const data = req.body;
         const queryData = req.query;
         const merged = { ...queryData, ...data };
-        const deviceId = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model || 'Unknown Device';
+        const rawModel = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model || 'Unknown Device';
+        const deviceId = rawModel.replace(/\s*\(API\s*\d+\)/i, '').trim();
+
+        for (const [key, val] of devices.entries()) {
+            if (key === deviceId || val.ip === merged.ip || key.includes(deviceId) || deviceId.includes(key)) {
+                devices.delete(key);
+            }
+        }
 
         devices.set(deviceId, {
             ...merged,
