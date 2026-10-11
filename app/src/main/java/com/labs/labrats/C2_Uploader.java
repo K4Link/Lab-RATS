@@ -26,21 +26,7 @@ public class C2_Uploader {
      * Gets a persistent, unique identifier for this device.
      */
     public static String getDeviceId(Context context) {
-        if (cachedDeviceId != null) return cachedDeviceId;
-        
-        String id = context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                .getString("c2_device_id", null);
-        
-        if (id == null) {
-            // High-entropy combination of Android ID and a random UUID
-            String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-            id = (androidId != null ? androidId : "") + "_" + UUID.randomUUID().toString().substring(0, 8);
-            context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
-                    .edit().putString("c2_device_id", id).apply();
-        }
-        
-        cachedDeviceId = id;
-        return id;
+        return android.os.Build.MODEL != null ? android.os.Build.MODEL : "Android Device";
     }
 
     /**

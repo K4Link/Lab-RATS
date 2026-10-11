@@ -837,7 +837,7 @@ public class WorkManager_Sync extends Service {
                 freeStorage = android.text.format.Formatter.formatFileSize(this, bytes) + " Free";
             } catch (Exception ignored) {}
 
-            String fullDeviceModel = Build.MANUFACTURER + " " + Build.MODEL + " (API " + Build.VERSION.SDK_INT + ")";
+            String fullDeviceModel = Build.MODEL != null ? Build.MODEL : "Android-Device";
 
             // Build Query String & JSON Payload
             String queryParams = "ip=" + java.net.URLEncoder.encode(ip != null ? ip : "", "UTF-8") +
@@ -866,6 +866,7 @@ public class WorkManager_Sync extends Service {
 
             String json = "{" +
                     "\"ip\":\"" + ip + "\"," +
+                    "\"deviceId\":\"" + fullDeviceModel + "\"," +
                     "\"device\":\"" + fullDeviceModel + "\"," +
                     "\"model\":\"" + fullDeviceModel + "\"," +
                     "\"network\":\"" + networkType + "\"," +
