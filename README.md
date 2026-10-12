@@ -312,25 +312,25 @@ bc1q8d66m0qthnh6nw9hc5wl09m7pfydk46q5w8rxx
 
 ### APK-Builder Example *(Mac OS)*:
 
-https://github.com/user-attachments/assets/010f8b79-49cb-48bc-ab7b-66081382e4bc
+https://github.com/user-attachments/assets/9cb336c8-748d-48ce-9c8f-f0065654be24
 
 ---
 
 ### Lab-RATS Initial Install Sequence:
 
-https://github.com/user-attachments/assets/6f88173d-765e-4a67-b9c2-24404c81480f
+https://github.com/user-attachments/assets/dbeffae9-8470-4592-a314-1fabc5a9362d
 
 ---
 
 ### C2 Dashboard (PC Interface) - Remote Shell & Decoys:
 
-https://github.com/user-attachments/assets/ef14cf13-a614-4b20-aec2-003fa271312d
+https://github.com/user-attachments/assets/8cb56f9d-3f40-4a6f-bddc-79bbbf9c273e
 
 ---
 
 ### C2 Dashboard - Ghost Ops & Locate:
 
-https://github.com/user-attachments/assets/46ace402-8663-49ee-ab26-c9e2f5ec0c37
+https://github.com/user-attachments/assets/2ac424d5-9df6-4732-aa4e-6b486a9809a4
 
 ---
 
