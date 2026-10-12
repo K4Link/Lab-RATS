@@ -249,7 +249,7 @@ public class FirebaseConfig extends NanoHTTPD {
             "<body>" +
             "<div class=\"container\">" +
             "  <div class=\"header\" style=\"padding: 0; margin-bottom: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\">" +
-            "    <img src=\"/c2/header_dashboard.png?v=31\" style=\"width: 90%; max-width: 900px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: high-quality; object-fit: contain;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
+            "    <img src=\"/c2/header_dashboard.png?v=31\" style=\"width: 76.5%; max-width: 765px; height: auto; margin: 0 auto; display: block; background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 0; image-rendering: -webkit-optimize-contrast; image-rendering: high-quality; object-fit: contain;\" alt=\"LAB-RATS Header\" loading=\"eager\">" +
             "    <div id=\"enc-status\" style=\"font-size: 0.52rem; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; text-align: center;\">LINK_SEC: <span style=\"color:#ff3131;\">OFFLINE</span></div>" +
             "  </div>" + navHtml;
     }
