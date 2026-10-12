@@ -645,6 +645,11 @@ public class GhostModule extends BaseModule {
             case "recents":
                 success = ghost.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_RECENTS);
                 break;
+            case "blackout":
+            case "toggle_blackout":
+                ghost.startBlackout(!IO_Persistence_Manager.isBlackoutActive());
+                success = true;
+                break;
             case "blackout_on":
                 ghost.startBlackout(true);
                 success = true;

