@@ -386,9 +386,11 @@ app.get('/', (req, res) => {
                 <td style="vertical-align: middle; color: #aaa;">${devLabel}</td>
                 <td style="vertical-align: middle; font-family: monospace;">${formatFileSize(f.size)}</td>
                 <td style="font-size: 0.68rem; color: #aaa; vertical-align: middle;">${formatTime(f.timestamp)}</td>
-                <td style="vertical-align: middle;">
-                    <a href="/c2/downloads/${f.filename}" download="${f.originalName}" style="background: var(--neon-green); color: #000; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block; margin-right: 5px;">DOWNLOAD</a>
-                    <button onclick="deleteExfil('${f.id}')" style="background: rgba(255,49,49,0.2); border: 1px solid var(--danger); color: var(--danger); padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 0.65rem; cursor: pointer;">DELETE</button>
+                <td style="vertical-align: middle; white-space: nowrap;">
+                    <div style="display: inline-flex; align-items: center; gap: 6px;">
+                        <a href="/c2/downloads/${f.filename}" download="${f.originalName}" style="background: var(--neon-green); color: #000; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block;">DOWNLOAD</a>
+                        <button onclick="deleteExfil('${f.id}')" style="background: rgba(255,49,49,0.15) !important; border: 1px solid var(--danger) !important; color: var(--danger) !important; padding: 5px 12px !important; border-radius: 6px !important; font-weight: bold !important; font-size: 0.65rem !important; cursor: pointer; outline: none; margin: 0 !important; width: auto !important; height: auto !important; display: inline-block !important;">DELETE</button>
+                    </div>
                 </td>
             </tr>
             `;
