@@ -209,9 +209,9 @@ app.get('/', (req, res) => {
             return `
             <tr>
                 <td style="font-family: monospace; color: var(--neon-cyan); white-space: nowrap; vertical-align: middle;">
-                    <div style="display: inline-flex; align-items: center; gap: 4px; vertical-align: middle;">
+                    <div style="display: inline-flex; align-items: center; gap: 5px; vertical-align: middle;">
+                        <span onclick="renameDevice('${d.deviceId}', '${(d.alias || '').replace(/'/g, "\\'")}')" style="cursor:pointer; font-size:0.6rem; opacity:0.75; transition:opacity 0.2s; line-height:1; user-select:none;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.75" title="Rename Target">✏️</span>
                         <span>${displayName}</span><span style="color:#666; font-size:0.68rem;">${subName}</span>
-                        <button onclick="renameDevice('${d.deviceId}', '${(d.alias || '').replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--neon-yellow); cursor:pointer; font-size:0.65rem; padding:0; line-height:1; opacity:0.75; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.75" title="Rename Target">✏️</button>
                     </div>
                 </td>
                 <td style="vertical-align: middle;">${d.model || 'SM-F731W'}</td>
