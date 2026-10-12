@@ -53,7 +53,9 @@ function loadData() {
             const json = JSON.parse(raw);
             if (json.devices && Array.isArray(json.devices)) {
                 json.devices.forEach(d => {
-                    if (d && d.deviceId) devices.set(d.deviceId, d);
+                    if (d && (d.deviceId || d.model)) {
+                        devices.set(d.deviceId || d.model, d);
+                    }
                 });
             }
             if (json.logs && Array.isArray(json.logs)) {
@@ -222,7 +224,7 @@ function handleCheckin(req, res) {
 
 // Tactical C2 Operator Dashboard (HTML)
 function serveDashboard(req, res) {
-    const deviceList = Array.from(devices.values()).filter(d => d.model && d.model !== 'Unknown Device');
+    const deviceList = Array.from(devices.values());
 
     let devicesHtml = deviceList.length === 0 ?
         '<tr><td colspan="8" style="text-align: center; color: #888; padding: 30px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
