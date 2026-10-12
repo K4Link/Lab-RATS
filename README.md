@@ -16,7 +16,7 @@
 # Lab-RATS - v1.6
 > Lightweight Android-Based Remote Administration Tool for Security: *(L.A.B. - R.A.T.S)*
 
-**Lab-RATS is an open-source, lightweight Android Remote Administration framework** packed with powerful **monitoring** and **interaction capabilities**. The system automates the generation of custom, signed `.apk` files for **deployment onto any Android device**, providing full device telemetry via a **sleek, web-based C2 dashboard**. Built to adapt to **strict modern mobile environments**, it delivers a **robust feature suite** that **operates reliably** across both **legacy** and the **newest Android releases**.
+**Developed from the ground up by K4N3CO, Lab-RATS is an open-source, lightweight Android Remote Administration framework** packed with powerful **monitoring** and **interaction capabilities**. The system automates the generation of custom, signed `.apk` files for **deployment onto any Android device**, providing full device telemetry via a **sleek, web-based C2 dashboard**. Built to adapt to **strict modern mobile environments**, it delivers a **robust feature suite** that **operates reliably** across both **legacy** and the **newest Android releases**.
 
 ---
 
@@ -28,6 +28,9 @@
   <br><p align="center">
   <img src="https://github.com/user-attachments/assets/7097e0e0-1190-4774-b758-ca58b5e8760f" alt="Full Web Page Screenshot" width="70%">
 </details>
+
+> [!NOTE]
+> **Lab-RATS now supports IPv4 connections** by hosting a backend at **Render.com** *(Free Tier Supported)*. See **"Command & Control (C2)" Option 2 below for setup instructions**.
 
 ---
 
@@ -211,7 +214,7 @@ function handleRequest(e) {
 
 ---
 
-### ✌🏻 Option 2: Tactical Node.js Backend *(Advanced)*
+### ✌🏻 NEW! Option 2: Tactical Node.js Backend *(Upgraded v1.6)*
 **Best for professional fleet management** and **Automatic File Exfiltration**.
 
 **Quick Deployment on Render** (https://render.com)
@@ -507,7 +510,7 @@ This tool is for **educational and authorized security testing purposes ONLY!**.
 
 ## 📄 License
 
-**Lab-RATS** is **Licensed** to **K4N3CO** under the [MIT License](LICENSE).
+**Lab-RATS-v1.6** is **Licensed** to **KAN3C0** under the [MIT License](LICENSE).
 
 ---
 
@@ -515,4 +518,4 @@ This tool is for **educational and authorized security testing purposes ONLY!**.
 <img src="https://img.shields.io/badge/The one's who MIND don't matter...-The one's who MATTER don't mind-cyan?style=for-the-badge&logo=maserati&logoColor=white">
 <br>
 <p align="center">
-<img src="https://img.shields.io/badge/Developed By-K4N3CO ©2026-darkred?style=for-the-badge&logo=magisk&logoColor=white">
+<img src="https://img.shields.io/badge/Developed By-KAN3C0 ©2026-darkred?style=for-the-badge&logo=magisk&logoColor=white">
