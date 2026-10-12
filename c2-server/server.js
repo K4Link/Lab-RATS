@@ -89,9 +89,12 @@ function handleCheckin(req, res) {
     }
 }
 
-// Routes - POST / handles check-ins directly at root
+// Routes - POST / handles check-ins directly at root and all subpaths
 app.post('/', handleCheckin);
 app.post('/checkin', handleCheckin);
+app.post('/checkin/', handleCheckin);
+app.post('/api/checkin', handleCheckin);
+app.post('/api/checkin/', handleCheckin);
 
 // Device command polling
 app.get('/tunnel-poll', (req, res) => {
