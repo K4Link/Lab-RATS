@@ -180,7 +180,7 @@ app.get('/', (req, res) => {
     const deviceList = Array.from(devices.values());
 
     let devicesHtml = deviceList.length === 0 ?
-        '<tr><td colspan="8" style="text-align: center; color: #888; padding: 30px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
+        '<tr><td colspan="8" style="text-align: center; color: #888; padding: 20px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
         deviceList.map(d => `
             <tr>
                 <td style="font-family: monospace; color: var(--neon-cyan);">${d.brand || d.deviceId || 'samsung'}</td>
@@ -189,8 +189,8 @@ app.get('/', (req, res) => {
                 <td>${d.battery || '100%'}</td>
                 <td style="font-family: monospace; color: var(--neon-green);">${d.ip || 'N/A'}:${d.port || '9191'}</td>
                 <td>${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
-                <td style="font-size: 0.75rem; color: #aaa;">${formatTime(d.lastSeen)}</td>
-                <td><a href="/proxy/?deviceId=${d.deviceId || d.brand || 'samsung'}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
+                <td style="font-size: 0.68rem; color: #aaa;">${formatTime(d.lastSeen)}</td>
+                <td><a href="/proxy/?deviceId=${d.deviceId || d.brand || 'samsung'}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block;">CONNECT</a></td>
             </tr>
         `).join('');
 
@@ -203,8 +203,10 @@ app.get('/', (req, res) => {
     <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/c2/style.css">
     <style>
-        th { padding: 14px 20px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.7rem !important; letter-spacing: 2px !important; text-transform: uppercase !important; white-space: nowrap !important; }
-        td { padding: 14px 20px !important; white-space: nowrap !important; }
+        .card { padding: 18px !important; }
+        table { width: 100% !important; border-collapse: separate !important; border-spacing: 0 6px !important; table-layout: auto !important; }
+        th { padding: 8px 10px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.62rem !important; letter-spacing: 1px !important; text-transform: uppercase !important; white-space: nowrap !important; }
+        td { padding: 8px 10px !important; font-size: 0.7rem !important; white-space: nowrap !important; }
     </style>
 </head>
 <body>
