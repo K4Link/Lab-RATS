@@ -228,7 +228,7 @@ function handleRequest(e) {
 <details>
   <summary>📸 Click to View Render C2 Screenshot</summary>
   <br><p align="center">
-  <img src="https://github.com/user-attachments/assets/a1d9f43e-ca61-41da-a856-fa8846fe8b44" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/e1590898-79d9-4017-b504-832ffb710d7d" alt="Full Web Page Screenshot" width="90%">
 </details>
 
 **Advantages of Option 2**:
