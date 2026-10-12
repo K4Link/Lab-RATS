@@ -208,17 +208,19 @@ app.get('/', (req, res) => {
             const subName = (d.alias && d.alias.trim()) ? ` (${d.brand || ''})` : '';
             return `
             <tr>
-                <td style="font-family: monospace; color: var(--neon-cyan); white-space: nowrap;">
-                    <span>${displayName}</span><span style="color:#666; font-size:0.65rem;">${subName}</span>
-                    <button onclick="renameDevice('${d.deviceId}', '${(d.alias || '').replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--neon-yellow); cursor:pointer; margin-left:6px; font-size:0.75rem; padding:0; display:inline;" title="Rename Target">✏️</button>
+                <td style="font-family: monospace; color: var(--neon-cyan); white-space: nowrap; vertical-align: middle;">
+                    <div style="display: inline-flex; align-items: center; gap: 4px; vertical-align: middle;">
+                        <span>${displayName}</span><span style="color:#666; font-size:0.62rem;">${subName}</span>
+                        <button onclick="renameDevice('${d.deviceId}', '${(d.alias || '').replace(/'/g, "\\'")}')" style="background:none; border:none; color:var(--neon-yellow); cursor:pointer; font-size:0.58rem; padding:0; line-height:1; opacity:0.75; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.75" title="Rename Target">✏️</button>
+                    </div>
                 </td>
-                <td>${d.model || 'SM-F731W'}</td>
-                <td>Android ${d.os || '16'}</td>
-                <td>${d.battery || '100%'}</td>
-                <td style="font-family: monospace; color: var(--neon-green);">${d.ip || 'N/A'}:${d.port || '9191'}</td>
-                <td>${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
-                <td style="font-size: 0.68rem; color: #aaa;">${formatTime(d.lastSeen)}</td>
-                <td><a href="/proxy/?deviceId=${encodeURIComponent(d.deviceId)}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block;">CONNECT</a></td>
+                <td style="vertical-align: middle;">${d.model || 'SM-F731W'}</td>
+                <td style="vertical-align: middle;">Android ${d.os || '16'}</td>
+                <td style="vertical-align: middle;">${d.battery || '100%'}</td>
+                <td style="font-family: monospace; color: var(--neon-green); vertical-align: middle;">${d.ip || 'N/A'}:${d.port || '9191'}</td>
+                <td style="vertical-align: middle;">${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
+                <td style="font-size: 0.68rem; color: #aaa; vertical-align: middle;">${formatTime(d.lastSeen)}</td>
+                <td style="vertical-align: middle;"><a href="/proxy/?deviceId=${encodeURIComponent(d.deviceId)}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block;">CONNECT</a></td>
             </tr>
             `;
         }).join('');
@@ -234,8 +236,8 @@ app.get('/', (req, res) => {
     <style>
         .card { padding: 18px !important; }
         table { width: 100% !important; border-collapse: separate !important; border-spacing: 0 6px !important; table-layout: auto !important; }
-        th { padding: 8px 10px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.62rem !important; letter-spacing: 1px !important; text-transform: uppercase !important; white-space: nowrap !important; }
-        td { padding: 8px 10px !important; font-size: 0.7rem !important; white-space: nowrap !important; }
+        th { padding: 8px 10px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.62rem !important; letter-spacing: 1px !important; text-transform: uppercase !important; white-space: nowrap !important; vertical-align: middle !important; }
+        td { padding: 8px 10px !important; font-size: 0.7rem !important; white-space: nowrap !important; vertical-align: middle !important; }
     </style>
 </head>
 <body>
