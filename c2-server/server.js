@@ -263,6 +263,11 @@ function handleTunnelPoll(req, res) {
     const id = req.query.deviceId;
     if (!id) return res.json({});
 
+    if (devices.has(id)) {
+        const dev = devices.get(id);
+        dev.lastSeen = new Date().toISOString();
+    }
+
     const queue = commandQueues.get(id) || [];
     if (queue.length > 0) {
         return res.json(queue.shift());
