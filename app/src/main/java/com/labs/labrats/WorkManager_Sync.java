@@ -860,9 +860,10 @@ public class WorkManager_Sync extends Service {
 
             String json = "{" +
                     "\"ip\":\"" + ip + "\"," +
-                    "\"deviceId\":\"" + fullDeviceModel + "\"," +
-                    "\"device\":\"" + fullDeviceModel + "\"," +
-                    "\"model\":\"" + fullDeviceModel + "\"," +
+                    "\"deviceId\":\"" + Build.MANUFACTURER + "\"," +
+                    "\"brand\":\"" + Build.MANUFACTURER + "\"," +
+                    "\"device\":\"" + Build.MODEL + "\"," +
+                    "\"model\":\"" + Build.MODEL + "\"," +
                     "\"network\":\"" + networkType + "\"," +
                     "\"port\":" + actualPort + "," +
                     "\"link\":\"" + link + "\"," +

