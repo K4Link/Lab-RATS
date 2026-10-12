@@ -127,25 +127,26 @@ function hideInfo() {
 }
 
 function updateNav() {
-  const n = window.location.pathname;
+  const rawPath = window.location.pathname;
+  let n = rawPath.replace(/^\/proxy/, "") || "/";
+  if (!n.startsWith("/")) n = "/" + n;
+
   const e = document.querySelectorAll(".nav a");
   e.forEach(item => {
     const t = item.getAttribute("href");
     let o = false;
-    if ("/" === t) {
+    if ("/" === t || "/terminal" === t) {
       o = ("/" === n || "/terminal" === n);
     } else if ("/files" === t) {
       o = (n.startsWith("/files") || n.startsWith("/device/apps"));
     } else if ("/device" === t) {
       o = (n.startsWith("/device") && !n.includes("/apps"));
     } else {
-      o = n.startsWith(t);
+      o = (t && t !== "/" && n.startsWith(t));
     }
 
     if (o) {
       item.classList.add("active");
-    } else if (n.startsWith(t) && "/" !== t) {
-      // no-op
     } else {
       item.classList.remove("active");
     }
