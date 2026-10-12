@@ -30,7 +30,7 @@
 </details>
 
 > [!NOTE]
-> **Lab-RATS now supports IPv4 connections** by hosting a backend at **Render.com** *(Free Tier Supported)*. See **"Command & Control (C2)" Option 2 below for setup instructions**.
+> **Lab-RATS now supports IPv4 connections** by **hosting on   Render.com** *(Free Tier Supported)*. See **"Command & Control (C2)" Option 2 below for setup instructions**.
 
 ---
 
