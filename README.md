@@ -224,12 +224,10 @@ function handleRequest(e) {
 <br>**3. Set the Build Command** to `npm install`.
 <br>**4. Set the Start Command** to `npm start`.
 <br>**5. Deploy!** Once live, **copy your Render URL** *(e.g., https://labrats-c2.onrender.com)*, then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL**.
-
-<details>
-  <summary>📸 Click to View Render C2 Screenshot</summary>
-  <br><p align="center">
-  <img src="https://github.com/user-attachments/assets/e1590898-79d9-4017-b504-832ffb710d7d" alt="Full Web Page Screenshot" width="90%">
-</details>
+ 
+### Render C2 Example:
+  
+  <img src="https://github.com/user-attachments/assets/e1590898-79d9-4017-b504-832ffb710d7d" alt="Full Web Page Screenshot" width="80%">
 
 **Advantages of Option 2**:
 - 🌐 **Dual-Stack IP Binding**: **Full support for both IPv4 and IPv6 connections**, **enabling seamless C2 telemetry** and **reverse WebSocket tunneling** across **cellular carrier NAT64** and **dual-stack Wi-Fi networks**.
