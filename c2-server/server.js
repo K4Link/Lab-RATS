@@ -500,7 +500,7 @@ app.get('/', (req, res) => {
         @media (min-width: 1024px) { body { zoom: 0.9; } }
         .card { padding: 18px !important; }
         table { width: 100% !important; border-collapse: separate !important; border-spacing: 0 6px !important; table-layout: auto !important; }
-        th { padding: 10px 8px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.68rem !important; letter-spacing: 1px !important; text-transform: uppercase !important; white-space: nowrap !important; vertical-align: middle !important; }
+        th { padding: 10px 8px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.78rem !important; letter-spacing: 1px !important; text-transform: uppercase !important; white-space: nowrap !important; vertical-align: middle !important; }
         td { padding: 10px 8px !important; font-size: 0.78rem !important; white-space: nowrap !important; vertical-align: middle !important; }
     </style>
 </head>
@@ -533,8 +533,8 @@ app.get('/', (req, res) => {
                     </tbody>
                 </table>
             </div>
-            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-                <button class="btn" onclick="location.reload()" style="padding: 8px 24px; font-size: 0.72rem; min-width: 0; width: auto !important; height: auto !important; margin: 0;">REFRESH</button>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="location.reload()" style="padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto;">REFRESH TARGETS</button>
             </div>
         </div>
 
