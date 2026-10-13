@@ -224,15 +224,16 @@ function handleRequest(e) {
 <br>**3. Set the Build Command** to `npm install`.
 <br>**4. Set the Start Command** to `npm start`.
 <br>**5. Deploy!** Once live, **copy your Render URL** *(e.g., https://labrats-c2.onrender.com)*, then **Enter that URL into the APK-Builder when prompted** for the **C2 Webhook URL**.
- 
-### Render C2 Example:
+<details>
+  <summary>📸 Click to View Render C2 Screenshot</summary>
+  <br>
+  <img src="https://github.com/user-attachments/assets/1d97c7de-2c64-45ff-8653-9c3c0ac2c772" alt="Full Web Page Screenshot" width="80%">
+</details>
   
-  <img src="https://github.com/user-attachments/assets/e1590898-79d9-4017-b504-832ffb710d7d" alt="Full Web Page Screenshot" width="80%">
-
 **Advantages of Option 2**:
 - 🌐 **Dual-Stack IP Binding**: **Full support for both IPv4 and IPv6 connections**, **enabling seamless C2 telemetry** and **reverse WebSocket tunneling** across **cellular carrier NAT64** and **dual-stack Wi-Fi networks**.
 - 📂 **Exfiltration Vault**: **Audio/Video recordings** are automatically uploaded and **stored on your server**.
-- 📡 **Live Fleet List**: A **professional dashboard** to **manage all devices in one place**, with **editable device name** for **easy device recognition**.
+- 📡 **Live Fleet List**: A **professional dashboard** to **manage all devices in one place**, with **editable device name** for **easy device recognition** and **NEW "Quick Action" pull-down menu** to deploy some features **without directly connecting**.
 - 🔄 **Dynamic Sync**: **Heartbeat reporting** ensures your **P2P links are always up-to-date**.
 
 ---
