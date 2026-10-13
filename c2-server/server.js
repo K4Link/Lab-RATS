@@ -465,6 +465,7 @@ app.get('/', (req, res) => {
     <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/c2/style.css">
     <style>
+        @media (min-width: 1024px) { body { zoom: 0.9; } }
         .card { padding: 18px !important; }
         table { width: 100% !important; border-collapse: separate !important; border-spacing: 0 6px !important; table-layout: auto !important; }
         th { padding: 10px 8px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.68rem !important; letter-spacing: 1px !important; text-transform: uppercase !important; white-space: nowrap !important; vertical-align: middle !important; }
