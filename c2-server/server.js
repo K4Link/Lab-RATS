@@ -480,7 +480,7 @@ app.get('/', (req, res) => {
         </div>
 
         <div class="card" style="margin-top: 20px; border-left: 3px solid var(--neon-cyan);">
-            <h2 style="text-align: center; color: var(--neon-cyan); margin-bottom: 20px;">CONNECTED_TARGETS_REGISTRY</h2>
+            <h2 style="text-align: center; color: var(--neon-cyan); margin-bottom: 20px;">CONNECTED_TARGETS</h2>
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
@@ -501,8 +501,8 @@ app.get('/', (req, res) => {
                     </tbody>
                 </table>
             </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn" onclick="location.reload()" style="padding: 10px 30px; font-size: 0.75rem; display: inline-block; margin: 0 auto;">REFRESH_REGISTRY</button>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn" onclick="location.reload()" style="padding: 8px 24px; font-size: 0.72rem; min-width: 0; width: auto !important; height: auto !important; margin: 0;">REFRESH</button>
             </div>
         </div>
 
