@@ -34,14 +34,23 @@
 
             <!-- Header -->
 
+            <View
+                android:layout_width="351dp"
+                android:layout_height="2dp"
+                android:layout_gravity="center_horizontal"
+                android:alpha="1"
+                android:background="#C900F2FF" />
+
             <ImageView
                 android:id="@+id/ivHeaderBanner"
-                android:layout_width="match_parent"
-                android:layout_height="244dp"
-                android:layout_marginTop="10dp"
+                android:layout_width="369dp"
+                android:layout_height="261dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="5dp"
                 android:layout_marginBottom="25dp"
                 android:adjustViewBounds="true"
                 android:background="@drawable/header_card_bg"
+                android:paddingTop="5dp"
                 android:scaleType="fitCenter"
                 app:srcCompat="@drawable/header" />
 
