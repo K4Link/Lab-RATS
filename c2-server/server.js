@@ -479,8 +479,8 @@ app.get('/', (req, res) => {
             <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
         </div>
 
-        <div class="card" style="margin-top: 20px;">
-            <h2>CONNECTED_TARGETS_REGISTRY</h2>
+        <div class="card" style="margin-top: 20px; border-left: 3px solid var(--neon-cyan);">
+            <h2 style="text-align: center; color: var(--neon-cyan); margin-bottom: 20px;">CONNECTED_TARGETS_REGISTRY</h2>
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
@@ -507,10 +507,10 @@ app.get('/', (req, res) => {
         </div>
 
         <!-- EXFILTRATED DATA VAULT CARD -->
-        <div class="card" style="margin-top: 25px; border-left-color: var(--neon-cyan);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="margin: 0; color: var(--neon-cyan);">EXFILTRATED_DATA_VAULT</h2>
-                <span style="font-size: 0.7rem; color: #aaa;">TOTAL PAYLOADS: <b style="color: var(--neon-green);">${exfiltratedFiles.length}</b></span>
+        <div class="card" style="margin-top: 25px; border-left: 3px solid var(--neon-cyan);">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="margin: 0 auto 5px auto; color: var(--neon-cyan); text-align: center;">EXFILTRATED_DATA_VAULT</h2>
+                <span style="font-size: 0.7rem; color: #aaa; display: block; text-align: center;">TOTAL PAYLOADS: <b style="color: var(--neon-green);">${exfiltratedFiles.length}</b></span>
             </div>
             <div style="overflow-x: auto;">
                 <table>
