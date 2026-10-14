@@ -13,6 +13,8 @@
   <img src="https://img.shields.io/badge/License-MIT-orange?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
 </p>
 
+---
+
 <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=36&pause=11800&color=00F2FF&center=false&vStart=true&width=800&height=70&lines=Lab-RATS" alt="Typing Banner" />
 </p>
 
