@@ -12,9 +12,9 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
         android:alpha="0.45"
         android:contentDescription="@null"
+        android:scaleType="centerCrop"
         app:srcCompat="@drawable/ic_cyber_grid_tile" />
 
     <ScrollView
@@ -29,28 +29,24 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="3dp"
             android:orientation="vertical"
-            android:padding="13dp">
+            android:padding="10dp">
 
             <!-- Header -->
 
-            <View
-                android:layout_width="351dp"
-                android:layout_height="2dp"
-                android:layout_gravity="center_horizontal"
-                android:alpha="1"
-                android:background="#C900F2FF" />
-
             <ImageView
                 android:id="@+id/ivHeaderBanner"
-                android:layout_width="369dp"
-                android:layout_height="261dp"
+                android:layout_width="362dp"
+                android:layout_height="266dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="5dp"
                 android:layout_marginBottom="25dp"
                 android:adjustViewBounds="true"
                 android:background="@drawable/header_card_bg"
-                android:paddingTop="5dp"
+                android:paddingLeft="10dp"
+                android:paddingTop="2dp"
+                android:paddingRight="10dp"
+                android:paddingBottom="2dp"
                 android:scaleType="fitCenter"
                 app:srcCompat="@drawable/header" />
 
@@ -76,7 +72,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="192dp"
-                        android:background="#73040404"
+                        android:background="#052223"
                         android:gravity="bottom"
                         android:orientation="vertical"
                         android:padding="13dp">
@@ -96,9 +92,9 @@
 
                         <View
                             android:layout_width="match_parent"
-                            android:layout_height="1dp"
+                            android:layout_height="2dp"
                             android:layout_marginBottom="15dp"
-                            android:background="#AF5A5F5B" />
+                            android:background="#FC050505" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -117,7 +113,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:alpha="0.9"
-                            android:background="#03171D"
+                            android:background="#050505"
                             android:fontFamily="@font/aldrich"
                             android:gravity="center_vertical"
                             android:letterSpacing="0.05"
@@ -145,7 +141,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:background="#03171D"
+                            android:background="#020202"
                             android:fontFamily="@font/assistant"
                             android:gravity="center_vertical"
                             android:minHeight="38dp"
